@@ -1,0 +1,15 @@
+allprojects {
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+
+    repositories {
+        jcenter()
+        mavenCentral()
+    }
+}
+
+configure(subprojects.findAll { it.name == 'jchat-client' || it.name == 'jchat-server' }) {
+    apply plugin: 'java'
+    apply plugin: 'application'
+}

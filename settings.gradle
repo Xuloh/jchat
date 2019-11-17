@@ -1,0 +1,4 @@
+rootProject.name = 'jchat'
+include 'jchat-common'
+include 'jchat-client'
+include 'jchat-server'
