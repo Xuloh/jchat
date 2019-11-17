@@ -4,6 +4,7 @@ targetCompatibility = 13
 dependencies {
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.1'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.1'
+    implementation project(':jchat-common')
     runtimeOnly group: 'org.fusesource.jansi', name: 'jansi', version: '1.18'
     testImplementation 'junit:junit:4.12'
 }
