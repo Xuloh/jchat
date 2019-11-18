@@ -2,7 +2,6 @@ package fr.insa.jchat.common;
 
 import java.io.File;
 import java.net.Inet4Address;
-import java.util.List;
 import java.util.UUID;
 
 public class Server {
@@ -14,23 +13,14 @@ public class Server {
 
     private String description;
 
-    private Inet4Address address;
-
     private int port;
 
-    private List<User> users;
-
-    private List<Message> messages;
-
-    public Server(UUID uuid, String name, File image, String description, Inet4Address address, int port, List<User> users, List<Message> messages) {
+    public Server(UUID uuid, String name, File image, String description, int port) {
         this.uuid = uuid;
         this.name = name;
         this.image = image;
         this.description = description;
-        this.address = address;
         this.port = port;
-        this.users = users;
-        this.messages = messages;
     }
 
     public UUID getUuid() {
@@ -69,39 +59,12 @@ public class Server {
         return this;
     }
 
-    public Inet4Address getAddress() {
-        return this.address;
-    }
-
-    public Server setAddress(Inet4Address address) {
-        this.address = address;
-        return this;
-    }
-
     public int getPort() {
         return this.port;
     }
 
     public Server setPort(int port) {
         this.port = port;
-        return this;
-    }
-
-    public List<User> getUsers() {
-        return this.users;
-    }
-
-    public Server setUsers(List<User> users) {
-        this.users = users;
-        return this;
-    }
-
-    public List<Message> getMessages() {
-        return this.messages;
-    }
-
-    public Server setMessages(List<Message> messages) {
-        this.messages = messages;
         return this;
     }
 
@@ -124,6 +87,6 @@ public class Server {
 
     @Override
     public String toString() {
-        return "Server{" + "uuid=" + uuid + ", name='" + name + '\'' + ", image=" + image + ", description='" + description + '\'' + ", address=" + address + ", port=" + port + '}';
+        return "Server{" + "uuid=" + uuid + ", name='" + name + '\'' + ", image=" + image + ", description='" + description + '\'' + ", port=" + port + '}';
     }
 }
