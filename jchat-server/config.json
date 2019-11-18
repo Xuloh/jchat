@@ -1,0 +1,12 @@
+{
+  "server": {
+    "uuid": "c6cbf373-1bd7-4b32-8e8c-c3e6f34d8232",
+    "name": "My server",
+    "image": null,
+    "description": "Welcome to my chat server",
+    "port": 12345
+  },
+  "bindAddress": null,
+  "backlog": 50,
+  "maxConnections": 100
+}
