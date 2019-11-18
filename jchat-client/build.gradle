@@ -11,5 +11,9 @@ dependencies {
 }
 
 application {
-    mainClassName = 'fr.insa.jchat.client.App'
+    mainClassName = 'fr.insa.jchat.client.JChatClient'
+
+    run {
+        standardInput = System.in
+    }
 }
