@@ -11,5 +11,5 @@ dependencies {
 }
 
 application {
-    mainClassName = 'fr.insa.jchat.server.App'
+    mainClassName = 'fr.insa.jchat.server.JChatServer'
 }
