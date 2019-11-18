@@ -1,5 +1,6 @@
 package fr.insa.jchat.common;
 
+import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,13 +17,16 @@ public class Message {
 
     private User recipient;
 
-    public Message(UUID uuid, String text, List<String> userTags, List<String> links, User sender, User recipient) {
+    private Calendar date;
+
+    public Message(UUID uuid, String text, List<String> userTags, List<String> links, User sender, User recipient, Calendar date) {
         this.uuid = uuid;
         this.text = text;
         this.userTags = userTags;
         this.links = links;
         this.sender = sender;
         this.recipient = recipient;
+        this.date = date;
     }
 
     public UUID getUuid() {
@@ -79,6 +83,15 @@ public class Message {
         return this;
     }
 
+    public Calendar getDate() {
+        return this.date;
+    }
+
+    public Message setDate(Calendar date) {
+        this.date = date;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if(this == o)
@@ -98,6 +111,6 @@ public class Message {
 
     @Override
     public String toString() {
-        return "Message{" + "uuid=" + uuid + ", text='" + text + '\'' + ", userTags=" + userTags + ", links=" + links + ", sender=" + sender + ", recipient=" + recipient + '}';
+        return "Message{" + "uuid=" + uuid + ", text='" + text + '\'' + ", userTags=" + userTags + ", links=" + links + ", sender=" + sender + ", recipient=" + recipient + ", date=" + date + '}';
     }
 }
