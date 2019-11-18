@@ -1,7 +1,6 @@
 package fr.insa.jchat.common;
 
 import java.io.File;
-import java.util.List;
 
 public class User {
     private String username;
@@ -12,17 +11,11 @@ public class User {
 
     private String color;
 
-    private List<Message> sentMessages;
-
-    private List<Message> receivedMessages;
-
-    public User(String username, String password, File image, String color, List<Message> sentMessages, List<Message> receivedMessages) {
+    public User(String username, String password, File image, String color) {
         this.username = username;
         this.password = password;
         this.image = image;
         this.color = color;
-        this.sentMessages = sentMessages;
-        this.receivedMessages = receivedMessages;
     }
 
     public String getUsername() {
@@ -61,24 +54,6 @@ public class User {
         return this;
     }
 
-    public List<Message> getSentMessages() {
-        return this.sentMessages;
-    }
-
-    public User setSentMessages(List<Message> sentMessages) {
-        this.sentMessages = sentMessages;
-        return this;
-    }
-
-    public List<Message> getReceivedMessages() {
-        return this.receivedMessages;
-    }
-
-    public User setReceivedMessages(List<Message> receivedMessages) {
-        this.receivedMessages = receivedMessages;
-        return this;
-    }
-
     @Override
     public boolean equals(Object o) {
         if(this == o)
@@ -98,6 +73,6 @@ public class User {
 
     @Override
     public String toString() {
-        return "User{" + "username='" + username + '\'' + ", password='" + password + '\'' + ", image=" + image + ", color='" + color + '\'' + ", sentMessages=" + sentMessages + ", receivedMessages=" + receivedMessages + '}';
+        return "User{" + "username='" + username + '\'' + ", password='" + password + '\'' + ", image=" + image + ", color='" + color + '\'' + '}';
     }
 }
