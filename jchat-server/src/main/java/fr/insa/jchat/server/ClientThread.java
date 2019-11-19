@@ -1,19 +1,26 @@
 package fr.insa.jchat.server;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
+import fr.insa.jchat.common.Message;
 import fr.insa.jchat.common.Request;
 import fr.insa.jchat.common.User;
-import fr.insa.jchat.common.exception.InvalidBodySizeException;
+import fr.insa.jchat.common.deserializer.FileDeserializer;
 import fr.insa.jchat.common.exception.InvalidLoginException;
-import fr.insa.jchat.common.exception.InvalidMethodException;
+import fr.insa.jchat.common.exception.InvalidMessageException;
 import fr.insa.jchat.common.exception.InvalidParamValue;
+import fr.insa.jchat.common.exception.InvalidRequestException;
 import fr.insa.jchat.common.exception.InvalidSessionException;
 import fr.insa.jchat.common.exception.InvalidUsernameException;
+import fr.insa.jchat.common.exception.MissingBodyException;
 import fr.insa.jchat.common.exception.MissingParamException;
+import fr.insa.jchat.common.serializer.FileSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
@@ -29,9 +36,15 @@ public class ClientThread extends Thread {
 
     private Socket clientSocket;
 
+    private Gson gson;
+
     public ClientThread(Socket clientSocket, JChatServer jChatServer) {
         this.clientSocket = clientSocket;
         this.jChatServer = jChatServer;
+        this.gson = new GsonBuilder()
+            .registerTypeAdapter(File.class, new FileSerializer())
+            .registerTypeAdapter(File.class, new FileDeserializer())
+            .create();
     }
 
     @Override
@@ -49,7 +62,7 @@ public class ClientThread extends Thread {
                 LOGGER.debug("Got request : {}", request);
                 response = this.handleRequest(request);
             }
-            catch(InvalidBodySizeException | InvalidParamValue | InvalidMethodException | MissingParamException | InvalidUsernameException | InvalidLoginException | InvalidSessionException e) {
+            catch(InvalidRequestException e) {
                 response = Request.createErrorResponse(e);
             }
 
@@ -62,7 +75,7 @@ public class ClientThread extends Thread {
         this.close();
     }
 
-    private Request handleRequest(Request request) throws MissingParamException, InvalidUsernameException, InvalidLoginException, InvalidSessionException, InvalidParamValue {
+    private Request handleRequest(Request request) throws InvalidRequestException {
         switch(request.getMethod()) {
             case REGISTER:
                 return this.handleRegister(request);
@@ -71,6 +84,7 @@ public class ClientThread extends Thread {
             case GET:
                 return this.handleGet(request);
             case MESSAGE:
+                return this.handleMessage(request);
             default:
                 LOGGER.error("Unsupported request method : {}", request);
                 return null;
@@ -84,7 +98,8 @@ public class ClientThread extends Thread {
 
         synchronized(this.jChatServer.getUsers()) {
 
-            if(this.jChatServer.getUsers().containsKey(username)) {throw new InvalidUsernameException(username);}
+            if(this.jChatServer.getUsers().containsKey(username))
+                throw new InvalidUsernameException(username);
 
             User user = new User(username, password, null, "#4F87FF");
             this.jChatServer.getUsers().put(username, user);
@@ -134,8 +149,7 @@ public class ClientThread extends Thread {
     }
 
     private Request handleGetServerInfo(Request request) {
-        Gson gson = new Gson();
-        String serverInfo = gson.toJson(this.jChatServer.getServer());
+        String serverInfo = this.gson.toJson(this.jChatServer.getServer());
         int length = serverInfo.length();
 
         Request response = new Request();
@@ -147,19 +161,35 @@ public class ClientThread extends Thread {
     }
 
     private Request handleGetServerUserList(Request request) throws InvalidSessionException, MissingParamException, InvalidParamValue {
-
         this.jChatServer.checkSession(request);
 
-        Gson gson = new Gson();
-
         List<User> users = new ArrayList<>(this.jChatServer.getUsers().values());
-        String userList = gson.toJson(users);
+        String userList = this.gson.toJson(users);
 
         Request response = new Request();
         response.setMethod(Request.Method.OK);
         response.setParam("length", Integer.toString(userList.length()));
         response.setBody(userList);
 
+        return response;
+    }
+
+    private Request handleMessage(Request request) throws MissingBodyException, InvalidSessionException, MissingParamException, InvalidParamValue, InvalidMessageException {
+        Request.requireBody(request);
+        this.jChatServer.checkSession(request);
+        try {
+            Message message = this.gson.fromJson(request.getBody(), Message.class);
+            this.jChatServer.getMulticastQueue().put(message);
+        }
+        catch(JsonParseException e) {
+            throw new InvalidMessageException("Invalid message : " + request.getBody(), e, request.getBody());
+        }
+        catch(InterruptedException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+
+        Request response = new Request();
+        response.setMethod(Request.Method.OK);
         return response;
     }
 
