@@ -4,6 +4,7 @@ import fr.insa.jchat.common.exception.InvalidBodySizeException;
 import fr.insa.jchat.common.exception.InvalidMethodException;
 import fr.insa.jchat.common.exception.InvalidParamValue;
 import fr.insa.jchat.common.exception.InvalidRequestException;
+import fr.insa.jchat.common.exception.MissingBodyException;
 import fr.insa.jchat.common.exception.MissingParamException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -77,11 +78,16 @@ public class Request {
 
     public static void requiredParams(Request request, String... params) throws MissingParamException {
         for(String param : params) {
-            if(!request.hasParam(param))
+            if(!request.params.containsKey(param))
                 throw new MissingParamException(param);
-            else if(request.getParam(param).length() == 0)
+            else if(request.params.get(param).length() == 0)
                 throw new MissingParamException(param);
         }
+    }
+
+    public static void requireBody(Request request) throws MissingBodyException {
+        if(request.body == null || request.body.length() == 0)
+            throw new MissingBodyException();
     }
 
     public static Request createErrorResponse(InvalidRequestException e) {
@@ -104,15 +110,15 @@ public class Request {
     }
 
     public static void sendResponse(Request response, PrintStream out) {
-        out.println(response.getMethod());
+        out.println(response.method);
 
-        for(String param : response.getParamNames())
-            out.println(param + ":" + response.getParam(param));
+        for(String param : response.params.values())
+            out.println(param + ":" + response.params.get(param));
 
         out.println();
 
-        if(response.getBody() != null && response.getBody().length() > 0)
-            out.println(response.getBody());
+        if(response.body != null && response.body.length() > 0)
+            out.println(response.body);
     }
 
     public Request() {
