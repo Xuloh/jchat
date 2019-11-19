@@ -2,6 +2,7 @@ package fr.insa.jchat.server;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import fr.insa.jchat.common.Message;
 import fr.insa.jchat.common.Request;
 import fr.insa.jchat.common.Server;
 import fr.insa.jchat.common.User;
@@ -20,11 +21,15 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class JChatServer {
     private static final Logger LOGGER = LogManager.getLogger(JChatServer.class);
@@ -37,6 +42,8 @@ public class JChatServer {
 
     private Map<UUID, String> logins;
 
+    private BlockingQueue<Message> multicastQueue;
+
     public JChatServer(Config config) throws IOException {
         this.config = config;
         this.serverSocket = new ServerSocket(
@@ -46,6 +53,7 @@ public class JChatServer {
         );
         this.users = new ConcurrentHashMap<>();
         this.logins = new ConcurrentHashMap<>();
+        this.multicastQueue = new LinkedBlockingQueue<>();
     }
 
     public void run() {
@@ -82,6 +90,10 @@ public class JChatServer {
         return this.logins;
     }
 
+    public BlockingQueue<Message> getMulticastQueue() {
+        return this.multicastQueue;
+    }
+
     public Server getServer() {
         return this.config.getServer();
     }
@@ -102,26 +114,34 @@ public class JChatServer {
         if(!configFile.exists()) {
             LOGGER.warn("No config file found, creating a new one");
 
-            Server server = new Server(
-                UUID.randomUUID(),
-                "My server",
-                null,
-                "Welcome to my chat server",
-                12345
-            );
+            try {
+                Server server = new Server(
+                    UUID.randomUUID(),
+                    "My server",
+                    null,
+                    "Welcome to my chat server",
+                    12345,
+                    (Inet4Address)Inet4Address.getByName("225.0.0.0"),
+                    8712
+                );
 
-            serverConfig = new Config(
-                server,
-                null,
-                50,
-                100
-            );
+                serverConfig = new Config(
+                    server,
+                    null,
+                    50,
+                    100
+                );
 
-            PrintStream configOut = new PrintStream(configFile);
+                PrintStream configOut = new PrintStream(configFile);
 
-            configOut.println(gson.toJson(serverConfig));
+                configOut.println(gson.toJson(serverConfig));
 
-            LOGGER.info("Config file created");
+                LOGGER.info("Config file created");
+            }
+            catch(UnknownHostException e) {
+                LOGGER.error(e.getMessage(), e);
+                serverConfig = null;
+            }
         }
         else {
             BufferedReader configIn = new BufferedReader(new InputStreamReader(new FileInputStream(configFile)));
