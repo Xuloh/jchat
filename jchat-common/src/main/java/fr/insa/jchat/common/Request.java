@@ -4,6 +4,7 @@ import fr.insa.jchat.common.exception.InvalidBodySizeException;
 import fr.insa.jchat.common.exception.InvalidMethodException;
 import fr.insa.jchat.common.exception.InvalidParamValue;
 import fr.insa.jchat.common.exception.InvalidRequestException;
+import fr.insa.jchat.common.exception.MissingParamException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -43,7 +44,7 @@ public class Request {
         while(line.length() > 0) {
             String[] param = line.split(":", 2);
             LOGGER.debug("Param : {}", (Object)param);
-            request.setParams(param[0], param[1]);
+            request.setParam(param[0], param[1]);
             line = in.readLine();
         }
 
@@ -74,16 +75,25 @@ public class Request {
         return request;
     }
 
+    public static void requiredParams(Request request, String... params) throws MissingParamException {
+        for(String param : params) {
+            if(!request.hasParam(param))
+                throw new MissingParamException(param);
+            else if(request.getParam(param).length() == 0)
+                throw new MissingParamException(param);
+        }
+    }
+
     public static Request createErrorResponse(InvalidRequestException e) {
         Request request = new Request();
         request.setMethod(Request.Method.ERROR);
-        request.setParams("errorName", e.getErrorName());
+        request.setParam("errorName", e.getErrorName());
 
         try {
             Field[] fields = e.getClass().getDeclaredFields();
             for(Field field : fields) {
                 field.setAccessible(true);
-                request.setParams(field.getName(), field.get(e).toString());
+                request.setParam(field.getName(), field.get(e).toString());
             }
         }
         catch(IllegalAccessException ex) {
@@ -123,7 +133,7 @@ public class Request {
         return this.params.get(param);
     }
 
-    public void setParams(String name, String value) {
+    public void setParam(String name, String value) {
         this.params.put(name, value);
     }
 
