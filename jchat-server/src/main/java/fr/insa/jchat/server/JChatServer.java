@@ -2,9 +2,13 @@ package fr.insa.jchat.server;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import fr.insa.jchat.common.Request;
 import fr.insa.jchat.common.Server;
 import fr.insa.jchat.common.User;
 import fr.insa.jchat.common.deserializer.FileDeserializer;
+import fr.insa.jchat.common.exception.InvalidParamValue;
+import fr.insa.jchat.common.exception.InvalidSessionException;
+import fr.insa.jchat.common.exception.MissingParamException;
 import fr.insa.jchat.common.serializer.FileSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,12 +62,28 @@ public class JChatServer {
         }
     }
 
+    public synchronized void checkSession(Request request) throws MissingParamException, InvalidParamValue, InvalidSessionException {
+        Request.requiredParams(request, "session");
+        try {
+            UUID sessionUuid = UUID.fromString(request.getParam("session"));
+            if(!this.logins.containsKey(sessionUuid))
+                throw new InvalidSessionException();
+        }
+        catch(IllegalArgumentException e) {
+            throw new InvalidParamValue("Invalid value for param session", e,"session");
+        }
+    }
+
     public Map<String, User> getUsers() {
         return this.users;
     }
 
     public Map<UUID, String> getLogins() {
         return this.logins;
+    }
+
+    public Server getServer() {
+        return this.config.getServer();
     }
 
     public static Config loadConfig() throws FileNotFoundException {
