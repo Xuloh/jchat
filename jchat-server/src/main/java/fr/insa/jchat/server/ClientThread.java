@@ -1,5 +1,6 @@
 package fr.insa.jchat.server;
 
+import com.google.gson.Gson;
 import fr.insa.jchat.common.Request;
 import fr.insa.jchat.common.User;
 import fr.insa.jchat.common.exception.InvalidBodySizeException;
@@ -65,17 +66,12 @@ public class ClientThread extends Thread {
             case LOGIN:
                 return this.handleLogin(request);
             case GET:
+                return this.handleGet(request);
             case MESSAGE:
             default:
                 LOGGER.error("Unsupported request method : {}", request);
                 return null;
         }
-
-//        Request request1 = new Request();
-//        request1.setMethod(Request.Method.OK);
-//        request1.setParams("foo", "bar");
-//        request1.setBody("lorem ipsum dolor sit amet");
-//        return request1;
     }
 
     private Request handleRegister(Request request) throws MissingParamException, InvalidUsernameException {
@@ -115,6 +111,35 @@ public class ClientThread extends Thread {
         Request response = new Request();
         response.setMethod(Request.Method.OK);
         response.setParam("session", uuid.toString());
+        return response;
+    }
+
+    private Request handleGet(Request request) throws MissingParamException {
+        Request.requiredParams(request, "resource");
+
+        String resource = request.getParam("resource");
+
+        switch(resource) {
+            case "SERVER_INFO":
+                return this.handleGetServerInfo(request);
+            case "USER_LIST":
+                break;
+            case "":
+                break;
+        }
+        return null;
+    }
+
+    private Request handleGetServerInfo(Request request) {
+        Gson gson = new Gson();
+        String serverInfo = gson.toJson(this.jChatServer.getServer());
+        int length = serverInfo.length();
+
+        Request response = new Request();
+        response.setMethod(Request.Method.OK);
+        response.setParam("length", Integer.toString(length));
+        response.setBody(serverInfo);
+
         return response;
     }
 
