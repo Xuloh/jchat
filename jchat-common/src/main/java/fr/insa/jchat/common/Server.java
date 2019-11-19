@@ -15,12 +15,18 @@ public class Server {
 
     private int port;
 
-    public Server(UUID uuid, String name, File image, String description, int port) {
+    private Inet4Address multicastAddress;
+
+    private int multicastPort;
+
+    public Server(UUID uuid, String name, File image, String description, int port, Inet4Address multicastAddress, int multicastPort) {
         this.uuid = uuid;
         this.name = name;
         this.image = image;
         this.description = description;
         this.port = port;
+        this.multicastAddress = multicastAddress;
+        this.multicastPort = multicastPort;
     }
 
     public UUID getUuid() {
@@ -68,6 +74,24 @@ public class Server {
         return this;
     }
 
+    public Inet4Address getMulticastAddress() {
+        return this.multicastAddress;
+    }
+
+    public Server setMulticastAddress(Inet4Address multicastAddress) {
+        this.multicastAddress = multicastAddress;
+        return this;
+    }
+
+    public int getMulticastPort() {
+        return this.multicastPort;
+    }
+
+    public Server setMulticastPort(int multicastPort) {
+        this.multicastPort = multicastPort;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if(this == o)
@@ -87,6 +111,6 @@ public class Server {
 
     @Override
     public String toString() {
-        return "Server{" + "uuid=" + uuid + ", name='" + name + '\'' + ", image=" + image + ", description='" + description + '\'' + ", port=" + port + '}';
+        return "Server{" + "uuid=" + uuid + ", name='" + name + '\'' + ", image=" + image + ", description='" + description + '\'' + ", port=" + port + ", multicastAddress=" + multicastAddress + ", multicastPort=" + multicastPort + '}';
     }
 }

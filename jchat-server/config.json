@@ -1,10 +1,12 @@
 {
   "server": {
-    "uuid": "c6cbf373-1bd7-4b32-8e8c-c3e6f34d8232",
+    "uuid": "46962214-a28e-4db9-bbde-81590a3152c0",
     "name": "My server",
     "image": null,
     "description": "Welcome to my chat server",
-    "port": 12345
+    "port": 12345,
+    "multicastAddress": "225.0.0.0",
+    "multicastPort": 8712
   },
   "bindAddress": null,
   "backlog": 50,
