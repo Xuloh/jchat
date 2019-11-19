@@ -1,19 +1,28 @@
 package fr.insa.jchat.client;
 
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.net.Socket;
-import java.net.UnknownHostException;
-
-public class JChatClient {
+public class JChatClient extends Application {
     private static final Logger LOGGER = LogManager.getLogger(JChatClient.class);
 
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        ConnectPane root = new ConnectPane();
+        Scene scene = new Scene(root, 800, 600);
+        primaryStage.setTitle("JChat Client");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
     public static void main(String[] args) {
+        launch(args);
+    }
+
+    /*public static void main(String[] args) {
         String host = "localhost";
         int port = 12345;
 
@@ -61,5 +70,5 @@ public class JChatClient {
             LOGGER.error("Couldn't get I/O for the connection to : {}", args[0]);
             System.exit(1);
         }
-    }
+    }*/
 }

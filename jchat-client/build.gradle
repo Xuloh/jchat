@@ -1,3 +1,12 @@
+plugins {
+    id 'org.openjfx.javafxplugin' version '0.0.8'
+}
+
+javafx {
+    version = '13'
+    modules = [ 'javafx.controls', 'javafx.fxml' ]
+}
+
 sourceCompatibility = 13
 targetCompatibility = 13
 
