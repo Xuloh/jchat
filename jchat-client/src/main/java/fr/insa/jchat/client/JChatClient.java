@@ -25,12 +25,30 @@ public class JChatClient {
             BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in))
         ) {
             LOGGER.info("Connected :D");
-            String line = stdIn.readLine();
+            StringBuilder request = new StringBuilder();
+            StringBuilder response = new StringBuilder();
 
-            while(!line.equals("exit")) {
-                socOut.println(line);
-                LOGGER.info("echo : {}", socIn.readLine());
-                line = stdIn.readLine();
+            String stdInLine = stdIn.readLine();
+
+            while(!"exit".equals(stdInLine)) {
+                if("send".equals(stdInLine)) {
+                    socOut.println(request);
+                    LOGGER.info("Sending request : {}", request);
+                    request.delete(0, request.length());
+
+                    String socInLine = socIn.readLine();
+                    while(socInLine != null) {
+                        response.append(socInLine);
+                        socInLine = socIn.readLine();
+                    }
+                    LOGGER.info("Server response : {}", response);
+                }
+                else {
+                    request.append(stdInLine);
+                    request.append('\n');
+                }
+
+                stdInLine = stdIn.readLine();
             }
             LOGGER.info("See you ;)");
         }
