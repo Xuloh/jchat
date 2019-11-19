@@ -3,6 +3,7 @@ package fr.insa.jchat.server;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import fr.insa.jchat.common.Server;
+import fr.insa.jchat.common.User;
 import fr.insa.jchat.common.deserializer.FileDeserializer;
 import fr.insa.jchat.common.serializer.FileSerializer;
 import org.apache.logging.log4j.LogManager;
@@ -17,7 +18,9 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class JChatServer {
     private static final Logger LOGGER = LogManager.getLogger(JChatServer.class);
@@ -26,6 +29,10 @@ public class JChatServer {
 
     private ServerSocket serverSocket;
 
+    private Map<String, User> users;
+
+    private Map<UUID, String> logins;
+
     public JChatServer(Config config) throws IOException {
         this.config = config;
         this.serverSocket = new ServerSocket(
@@ -33,6 +40,8 @@ public class JChatServer {
             config.getBacklog(),
             config.getBindAddress()
         );
+        this.users = new ConcurrentHashMap<>();
+        this.logins = new ConcurrentHashMap<>();
     }
 
     public void run() {
@@ -41,12 +50,20 @@ public class JChatServer {
             try {
                 Socket clientSocket = this.serverSocket.accept();
                 LOGGER.info("Starting client thread");
-                new ClientThread(clientSocket).start();
+                new ClientThread(clientSocket, this).start();
             }
             catch(IOException e) {
                 LOGGER.error("An error occurred while waiting for a connection", e);
             }
         }
+    }
+
+    public Map<String, User> getUsers() {
+        return this.users;
+    }
+
+    public Map<UUID, String> getLogins() {
+        return this.logins;
     }
 
     public static Config loadConfig() throws FileNotFoundException {
