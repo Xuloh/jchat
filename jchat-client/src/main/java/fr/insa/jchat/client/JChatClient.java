@@ -39,6 +39,7 @@ public class JChatClient {
                     String socInLine = socIn.readLine();
                     while(socInLine != null) {
                         response.append(socInLine);
+                        response.append('\n');
                         socInLine = socIn.readLine();
                     }
                     LOGGER.info("Server response : {}", response);
