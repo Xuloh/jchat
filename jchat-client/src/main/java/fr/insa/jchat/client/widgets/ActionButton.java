@@ -1,5 +1,6 @@
-package fr.insa.jchat.client;
+package fr.insa.jchat.client.widgets;
 
+import fr.insa.jchat.client.ActionController;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
 

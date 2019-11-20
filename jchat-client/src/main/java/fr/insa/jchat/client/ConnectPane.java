@@ -1,5 +1,8 @@
 package fr.insa.jchat.client;
 
+import fr.insa.jchat.client.widgets.ActionButton;
+import fr.insa.jchat.client.widgets.InputPasswordField;
+import fr.insa.jchat.client.widgets.InputTextField;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;

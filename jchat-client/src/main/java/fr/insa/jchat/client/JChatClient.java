@@ -2,6 +2,7 @@ package fr.insa.jchat.client;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,9 +12,14 @@ public class JChatClient extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        ConnectPane root = new ConnectPane();
-        ActionController.setConnectPane(root);
+        Pane root = new Pane();
+
+        ConnectPane connectPane = new ConnectPane();
+        root.getChildren().add(connectPane);
+        ActionController.setConnectPane(connectPane);
+
         Scene scene = new Scene(root, 700, 400);
+
         primaryStage.setTitle("JChat Client");
         primaryStage.setScene(scene);
         primaryStage.show();

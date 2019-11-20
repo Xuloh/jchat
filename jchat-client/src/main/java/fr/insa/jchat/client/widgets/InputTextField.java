@@ -1,4 +1,4 @@
-package fr.insa.jchat.client;
+package fr.insa.jchat.client.widgets;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
