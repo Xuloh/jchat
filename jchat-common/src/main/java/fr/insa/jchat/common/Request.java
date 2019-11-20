@@ -109,16 +109,16 @@ public class Request {
         return request;
     }
 
-    public static void sendResponse(Request response, PrintStream out) {
-        out.println(response.method);
+    public static void sendRequest(Request request, PrintStream out) {
+        out.println(request.method);
 
-        for(String param : response.params.values())
-            out.println(param + ":" + response.params.get(param));
+        for(String param : request.params.keySet())
+            out.println(param + ":" + request.params.get(param));
 
         out.println();
 
-        if(response.body != null && response.body.length() > 0)
-            out.println(response.body);
+        if(request.body != null && request.body.length() > 0)
+            out.println(request.body);
     }
 
     public Request() {

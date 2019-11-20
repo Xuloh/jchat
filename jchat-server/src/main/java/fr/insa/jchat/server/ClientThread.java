@@ -66,7 +66,7 @@ public class ClientThread extends Thread {
                 response = Request.createErrorResponse(e);
             }
 
-            Request.sendResponse(response, socketOut);
+            Request.sendRequest(response, socketOut);
         }
         catch(IOException e) {
             LOGGER.error("An error occurred in client thread {}", this.getName(), e);
