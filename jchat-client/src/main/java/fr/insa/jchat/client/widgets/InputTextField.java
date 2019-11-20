@@ -22,7 +22,7 @@ public class InputTextField extends TextField {
         this.valid = true;
 
         if(validate != null) {
-            this.errorLabel = new Label(errorMessage);
+            this.errorLabel = new Label();
             this.errorLabel.setStyle("-fx-text-fill: #f03434");
             this.errorLabel.setVisible(false);
             this.validate = validate;
@@ -33,6 +33,7 @@ public class InputTextField extends TextField {
                     boolean matches = this.validate.apply(this.getText());
                     this.valid = matches;
                     this.errorLabel.setVisible(!matches);
+                    this.errorLabel.setText(matches ? "" : errorMessage);
                 }
             });
         }

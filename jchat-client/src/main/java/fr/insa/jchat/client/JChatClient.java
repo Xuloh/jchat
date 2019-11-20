@@ -15,6 +15,8 @@ public class JChatClient extends Application {
         Pane root = new Pane();
 
         ConnectPane connectPane = new ConnectPane();
+        connectPane.prefWidthProperty().bind(root.widthProperty());
+        connectPane.prefHeightProperty().bind(root.heightProperty());
         root.getChildren().add(connectPane);
         ActionController.setConnectPane(connectPane);
 
