@@ -12,7 +12,8 @@ public class JChatClient extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         ConnectPane root = new ConnectPane();
-        Scene scene = new Scene(root, 800, 600);
+        ActionController.setConnectPane(root);
+        Scene scene = new Scene(root, 700, 400);
         primaryStage.setTitle("JChat Client");
         primaryStage.setScene(scene);
         primaryStage.show();
