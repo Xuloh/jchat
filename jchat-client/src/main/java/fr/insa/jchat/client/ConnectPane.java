@@ -7,7 +7,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
 public class ConnectPane extends VBox {
-    private static final String IP_REGEX = "^[12]?\\d{1,2}\\.[12]?\\d{1,2}\\.[12]?\\d{1,2}\\.[12]?\\d{1,2}$";
+    private static final String IP_REGEX = "^(localhost|[12]?\\d{1,2}\\.[12]?\\d{1,2}\\.[12]?\\d{1,2}\\.[12]?\\d{1,2})$";
 
     private Insets margin;
 
