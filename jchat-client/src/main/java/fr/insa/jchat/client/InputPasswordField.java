@@ -36,7 +36,7 @@ public class InputPasswordField extends PasswordField {
         }
     }
 
-    public boolean valid() {
+    public boolean isValid() {
         return this.valid;
     }
 

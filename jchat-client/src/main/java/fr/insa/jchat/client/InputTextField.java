@@ -38,7 +38,7 @@ public class InputTextField extends TextField {
         }
     }
 
-    public boolean valid() {
+    public boolean isValid() {
         return this.valid;
     }
 

@@ -9,8 +9,6 @@ import javafx.scene.layout.VBox;
 public class ConnectPane extends VBox {
     private static final String IP_REGEX = "^[12]?\\d{1,2}\\.[12]?\\d{1,2}\\.[12]?\\d{1,2}\\.[12]?\\d{1,2}$";
 
-    private static final String PORT_REGEX = "^|$";
-
     private Insets margin;
 
     private InputTextField ipField;
@@ -25,6 +23,21 @@ public class ConnectPane extends VBox {
         this.margin = new Insets(5, 5, 0, 5);
         this.createServerPane();
         this.createUserPane();
+    }
+
+    public String getValue(String input) throws IllegalArgumentException {
+        switch(input) {
+            case "ip":
+                return this.ipField.isValid() ? this.ipField.getText() : null;
+            case "port":
+                return this.portField.isValid() ? this.portField.getText() : null;
+            case "username":
+                return this.usernameField.isValid() ? this.usernameField.getText() : null;
+            case "password":
+                return this.passwordField.isValid() ? this.passwordField.getText() : null;
+            default:
+                throw new IllegalArgumentException("Invalid argument " + input);
+        }
     }
 
     private void createServerPane() {
