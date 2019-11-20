@@ -19,10 +19,16 @@ public class ConnectPane extends VBox {
 
     private InputPasswordField passwordField;
 
+    private Label messageLabel;
+
     public ConnectPane() {
         this.margin = new Insets(5, 5, 0, 5);
+        this.messageLabel = new Label();
+        this.messageLabel.setVisible(false);
         this.createServerPane();
         this.createUserPane();
+        this.getChildren().add(this.messageLabel);
+        setMargin(this.messageLabel, this.margin);
     }
 
     public String getValue(String input) throws IllegalArgumentException {
@@ -37,6 +43,25 @@ public class ConnectPane extends VBox {
                 return this.passwordField.isValid() ? this.passwordField.getText() : null;
             default:
                 throw new IllegalArgumentException("Invalid argument " + input);
+        }
+    }
+
+    public void displayMessage(String message) {
+        this.displayMessage(message, false);
+    }
+
+    public void displayMessage(String message, boolean error) {
+        if(message == null || message.length() == 0) {
+            this.messageLabel.setText("");
+            this.messageLabel.setVisible(false);
+        }
+        else {
+            if(error)
+                this.messageLabel.setStyle("-fx-text-fill: #f03434");
+            else
+                this.messageLabel.setStyle("-fx-text-fill: #5AD419");
+            this.messageLabel.setText(message);
+            this.messageLabel.setVisible(true);
         }
     }
 
