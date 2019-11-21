@@ -3,10 +3,12 @@ package fr.insa.jchat.client;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import fr.insa.jchat.common.Message;
 import fr.insa.jchat.common.Request;
 import fr.insa.jchat.common.Server;
 import fr.insa.jchat.common.User;
 import fr.insa.jchat.common.deserializer.FileDeserializer;
+import fr.insa.jchat.common.deserializer.MessageDeserializer;
 import fr.insa.jchat.common.exception.InvalidBodySizeException;
 import fr.insa.jchat.common.exception.InvalidMethodException;
 import fr.insa.jchat.common.exception.InvalidParamValue;
@@ -21,7 +23,9 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.lang.reflect.Type;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class ActionController {
@@ -35,9 +39,12 @@ public class ActionController {
 
     private static UUID session;
 
+    private static Map<String, User> users = new HashMap<>();
+
     private static Gson gson = new GsonBuilder()
         .registerTypeAdapter(File.class, new FileSerializer())
         .registerTypeAdapter(File.class, new FileDeserializer())
+        .registerTypeAdapter(Message.class, new MessageDeserializer(users))
         .create();
 
     public static void setJChatClient(JChatClient jChatClient) {
@@ -135,8 +142,21 @@ public class ActionController {
 
         Request response = sendRequest(userListRequest);
         Type userListType = new TypeToken<List<User>>() {}.getType();
-        List<User> users = gson.fromJson(response.getBody(), userListType);
-        return users;
+        List<User> userList = gson.fromJson(response.getBody(), userListType);
+        userList.forEach(user -> users.put(user.getUsername(), user));
+        return userList;
+    }
+
+    public static List<Message> getMessageHistory() throws InvalidMethodException, InvalidParamValue, InvalidBodySizeException, IOException {
+        Request messageHistoryRequest = new Request();
+        messageHistoryRequest.setMethod(Request.Method.GET);
+        messageHistoryRequest.setParam("session", session.toString());
+        messageHistoryRequest.setParam("resource", "MESSAGE_HISTORY");
+
+        Request response = sendRequest(messageHistoryRequest);
+        Type messageListType = new TypeToken<List<Message>>() {}.getType();
+        List<Message> messages = gson.fromJson(response.getBody(), messageListType);
+        return messages;
     }
 
     public static Request sendRequest(Request request) throws InvalidMethodException, InvalidParamValue, InvalidBodySizeException, IOException {
