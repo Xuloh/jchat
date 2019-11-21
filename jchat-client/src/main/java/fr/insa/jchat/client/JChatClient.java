@@ -10,21 +10,41 @@ import org.apache.logging.log4j.Logger;
 public class JChatClient extends Application {
     private static final Logger LOGGER = LogManager.getLogger(JChatClient.class);
 
+    private Pane root;
+
+    private ConnectPane connectPane;
+
+    private ServerPane serverPane;
+
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Pane root = new Pane();
+        this.root = new Pane();
 
-        ConnectPane connectPane = new ConnectPane();
-        connectPane.prefWidthProperty().bind(root.widthProperty());
-        connectPane.prefHeightProperty().bind(root.heightProperty());
-        root.getChildren().add(connectPane);
-        ActionController.setConnectPane(connectPane);
+        this.connectPane = new ConnectPane();
+        this.connectPane.prefWidthProperty().bind(this.root.widthProperty());
+        this.connectPane.prefHeightProperty().bind(this.root.heightProperty());
+        this.root.getChildren().add(this.connectPane);
+        ActionController.setJChatClient(this);
 
-        Scene scene = new Scene(root, 700, 400);
+        Scene scene = new Scene(this.root, 700, 400);
 
         primaryStage.setTitle("JChat Client");
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+
+    public void setServerPane(ServerPane serverPane) {
+        this.root.getChildren().remove(this.connectPane);
+        this.root.getChildren().add(serverPane);
+    }
+
+    public void resetConnectPane() {
+        this.root.getChildren().removeAll();
+        this.root.getChildren().add(this.connectPane);
+    }
+
+    public ConnectPane getConnectPane() {
+        return this.connectPane;
     }
 
     public static void main(String[] args) {
