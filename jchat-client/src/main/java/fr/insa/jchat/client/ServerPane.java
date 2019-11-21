@@ -17,12 +17,15 @@ public class ServerPane extends BorderPane {
 
     private List<User> users;
 
+    private List<Message> messages;
+
     private MessagesPane messagesPane;
 
-    public ServerPane(Server server, User user, List<User> users, String ip) {
+    public ServerPane(Server server, User user, List<User> users, List<Message> messages, String ip) {
         this.server = server;
         this.user = user;
         this.users = users;
+        this.messages = messages;
 
         ServerWidget serverWidget = new ServerWidget(server, ip);
         this.setTop(serverWidget);
@@ -34,6 +37,7 @@ public class ServerPane extends BorderPane {
         this.setRight(userListWidget);
 
         this.messagesPane = new MessagesPane();
+        this.messagesPane.addMessages(this.messages);
         this.setCenter(this.messagesPane);
     }
 

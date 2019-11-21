@@ -11,6 +11,6 @@ public class ActionButton extends Button {
         super(text);
         this.action = action;
         this.setTooltip(new Tooltip(tooltip));
-        this.setOnAction(event -> ActionController.handleAction(action));
+        this.setOnAction(event -> ActionController.handleAction(this.action));
     }
 }

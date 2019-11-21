@@ -7,6 +7,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class MessagesPane extends ScrollPane {
     private VBox root;
@@ -30,5 +31,14 @@ public class MessagesPane extends ScrollPane {
                   this.root.getChildren().add(messageWidget);
                   VBox.setMargin(messageWidget, this.margin);
               });
+    }
+
+    public void addMessages(List<Message> messages) {
+        messages.stream()
+                .map(MessageWidget::new)
+                .forEach(messageWidget -> {
+                    this.root.getChildren().add(messageWidget);
+                    VBox.setMargin(messageWidget, this.margin);
+                });
     }
 }

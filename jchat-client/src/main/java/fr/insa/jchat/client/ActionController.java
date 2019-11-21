@@ -101,11 +101,13 @@ public class ActionController {
         if(response.getMethod() == Request.Method.OK) {
             session = UUID.fromString(response.getParam("session"));
             jChatClient.getConnectPane().displayMessage("Successfully logged in");
+
             Server server = getServerInfo();
             User user = getUserInfo(username);
             List<User> users = getUserList();
+            List<Message> messages = getMessageHistory();
 
-            ServerPane serverPane = new ServerPane(server, user, users, ip);
+            ServerPane serverPane = new ServerPane(server, user, users, messages, ip);
             jChatClient.setServerPane(serverPane);
         }
         else if(response.getMethod() == Request.Method.ERROR)
