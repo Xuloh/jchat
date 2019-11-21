@@ -132,7 +132,7 @@ public class ClientThread extends Thread {
         return response;
     }
 
-    private Request handleGet(Request request) throws MissingParamException, InvalidSessionException, InvalidParamValue {
+    private Request handleGet(Request request) throws MissingParamException, InvalidSessionException, InvalidParamValue, InvalidUsernameException {
         Request.requiredParams(request, "resource");
 
         String resource = request.getParam("resource");
@@ -142,8 +142,8 @@ public class ClientThread extends Thread {
                 return this.handleGetServerInfo(request);
             case "USER_LIST":
                 return this.handleGetServerUserList(request);
-            case "":
-                break;
+            case "USER_INFO":
+                return this.handleGetUserInfo(request);
         }
         return null;
     }
@@ -170,6 +170,25 @@ public class ClientThread extends Thread {
         response.setMethod(Request.Method.OK);
         response.setParam("length", Integer.toString(userList.length()));
         response.setBody(userList);
+
+        return response;
+    }
+
+    private Request handleGetUserInfo(Request request) throws InvalidSessionException, MissingParamException, InvalidParamValue, InvalidUsernameException {
+        this.jChatServer.checkSession(request);
+        Request.requiredParams(request, "username");
+        String username = request.getParam("username");
+
+        if(!this.jChatServer.getUsers().containsKey(username))
+            throw new InvalidUsernameException(username);
+
+        User user = this.jChatServer.getUsers().get(username);
+        String body = this.gson.toJson(user);
+
+        Request response = new Request();
+        response.setMethod(Request.Method.OK);
+        response.setParam("length", Integer.toString(body.length()));
+        response.setBody(body);
 
         return response;
     }
