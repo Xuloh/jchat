@@ -16,6 +16,7 @@ import fr.insa.jchat.common.exception.InvalidUsernameException;
 import fr.insa.jchat.common.exception.MissingBodyException;
 import fr.insa.jchat.common.exception.MissingParamException;
 import fr.insa.jchat.common.serializer.FileSerializer;
+import fr.insa.jchat.common.serializer.MessageSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -45,6 +46,7 @@ public class ClientThread extends Thread {
         this.gson = new GsonBuilder()
             .registerTypeAdapter(File.class, new FileSerializer())
             .registerTypeAdapter(File.class, new FileDeserializer())
+            .registerTypeAdapter(Message.class, new MessageSerializer())
             .create();
     }
 
@@ -198,7 +200,13 @@ public class ClientThread extends Thread {
 
     private Request handleGetMessageHistory(Request request) throws InvalidSessionException, MissingParamException, InvalidParamValue {
         this.jChatServer.checkSession(request);
-        return null;
+
+        Request response = new Request();
+        response.setMethod(Request.Method.OK);
+        String body = this.gson.toJson(this.jChatServer.getMessages());
+        response.setParam("length", Integer.toString(body.length()));
+        response.setBody(body);
+        return response;
     }
 
     private Request handleMessage(Request request) throws MissingBodyException, InvalidSessionException, MissingParamException, InvalidParamValue, InvalidMessageException {

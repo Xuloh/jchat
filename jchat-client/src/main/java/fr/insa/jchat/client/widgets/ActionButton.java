@@ -10,7 +10,7 @@ public class ActionButton extends Button {
     public ActionButton(String text, String tooltip, String action) {
         super(text);
         this.action = action;
-        this.setTooltip(new Tooltip(text));
+        this.setTooltip(new Tooltip(tooltip));
         this.setOnAction(event -> ActionController.handleAction(action));
     }
 }
