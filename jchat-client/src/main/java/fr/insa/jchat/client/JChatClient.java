@@ -35,6 +35,8 @@ public class JChatClient extends Application {
 
     public void setServerPane(ServerPane serverPane) {
         this.root.getChildren().remove(this.connectPane);
+        serverPane.prefWidthProperty().bind(this.root.widthProperty());
+        serverPane.prefHeightProperty().bind(this.root.heightProperty());
         this.root.getChildren().add(serverPane);
     }
 

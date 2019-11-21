@@ -2,6 +2,7 @@ package fr.insa.jchat.client;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import fr.insa.jchat.common.Request;
 import fr.insa.jchat.common.Server;
 import fr.insa.jchat.common.User;
@@ -18,7 +19,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.lang.reflect.Type;
 import java.net.Socket;
+import java.util.List;
 import java.util.UUID;
 
 public class ActionController {
@@ -93,8 +96,9 @@ public class ActionController {
             jChatClient.getConnectPane().displayMessage("Successfully logged in");
             Server server = getServerInfo();
             User user = getUserInfo(username);
+            List<User> users = getUserList();
 
-            ServerPane serverPane = new ServerPane(server, user, ip);
+            ServerPane serverPane = new ServerPane(server, user, users, ip);
             jChatClient.setServerPane(serverPane);
         }
         else if(response.getMethod() == Request.Method.ERROR)
@@ -121,6 +125,18 @@ public class ActionController {
         Request response = sendRequest(userRequest);
         User user = gson.fromJson(response.getBody(), User.class);
         return user;
+    }
+
+    public static List<User> getUserList() throws InvalidMethodException, InvalidParamValue, InvalidBodySizeException, IOException {
+        Request userListRequest = new Request();
+        userListRequest.setMethod(Request.Method.GET);
+        userListRequest.setParam("session", session.toString());
+        userListRequest.setParam("resource", "USER_LIST");
+
+        Request response = sendRequest(userListRequest);
+        Type userListType = new TypeToken<List<User>>() {}.getType();
+        List<User> users = gson.fromJson(response.getBody(), userListType);
+        return users;
     }
 
     public static Request sendRequest(Request request) throws InvalidMethodException, InvalidParamValue, InvalidBodySizeException, IOException {
