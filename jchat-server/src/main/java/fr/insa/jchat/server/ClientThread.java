@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
@@ -144,6 +145,8 @@ public class ClientThread extends Thread {
                 return this.handleGetServerUserList(request);
             case "USER_INFO":
                 return this.handleGetUserInfo(request);
+            case "MESSAGE_HISTORY":
+                return this.handleGetMessageHistory(request);
         }
         return null;
     }
@@ -193,12 +196,21 @@ public class ClientThread extends Thread {
         return response;
     }
 
+    private Request handleGetMessageHistory(Request request) throws InvalidSessionException, MissingParamException, InvalidParamValue {
+        this.jChatServer.checkSession(request);
+        return null;
+    }
+
     private Request handleMessage(Request request) throws MissingBodyException, InvalidSessionException, MissingParamException, InvalidParamValue, InvalidMessageException {
         Request.requireBody(request);
-        this.jChatServer.checkSession(request);
+        UUID session = this.jChatServer.checkSession(request);
         try {
             Message message = this.gson.fromJson(request.getBody(), Message.class);
+            User user = this.jChatServer.getUserFromSession(session);
+            message.setSender(user);
+            message.setDate(Calendar.getInstance());
             this.jChatServer.getMulticastQueue().put(message);
+            this.jChatServer.getMessages().add(message);
         }
         catch(JsonParseException e) {
             throw new InvalidMessageException("Invalid message : " + request.getBody(), e, request.getBody());
