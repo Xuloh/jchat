@@ -65,8 +65,9 @@ public class Request {
                 if(nbRead != length)
                     throw new InvalidBodySizeException(length, nbRead);
 
-                LOGGER.debug("Body : {}", (Object)body);
-                request.setBody(new String(body));
+                String bodyStr = new String(body);
+                LOGGER.debug("Body : {}", bodyStr);
+                request.setBody(bodyStr);
             }
         }
         catch(NumberFormatException e) {
