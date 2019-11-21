@@ -69,6 +69,8 @@ public class ClientThread extends Thread {
                 response = Request.createErrorResponse(e);
             }
 
+            LOGGER.debug("Sending response : {}", response);
+
             Request.sendRequest(response, socketOut);
         }
         catch(IOException e) {

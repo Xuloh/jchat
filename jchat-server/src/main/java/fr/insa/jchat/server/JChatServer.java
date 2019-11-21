@@ -25,6 +25,8 @@ import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -57,6 +59,7 @@ public class JChatServer {
         this.users = new ConcurrentHashMap<>();
         this.logins = new ConcurrentHashMap<>();
         this.multicastQueue = new LinkedBlockingQueue<>();
+        this.messages = Collections.synchronizedList(new LinkedList<>());
     }
 
     public void run() {
