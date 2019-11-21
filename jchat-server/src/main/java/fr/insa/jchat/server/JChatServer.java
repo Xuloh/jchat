@@ -25,6 +25,7 @@ import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
@@ -41,6 +42,8 @@ public class JChatServer {
     private Map<String, User> users;
 
     private Map<UUID, String> logins;
+
+    private List<Message> messages;
 
     private BlockingQueue<Message> multicastQueue;
 
@@ -70,12 +73,13 @@ public class JChatServer {
         }
     }
 
-    public synchronized void checkSession(Request request) throws MissingParamException, InvalidParamValue, InvalidSessionException {
+    public synchronized UUID checkSession(Request request) throws MissingParamException, InvalidParamValue, InvalidSessionException {
         Request.requiredParams(request, "session");
         try {
             UUID sessionUuid = UUID.fromString(request.getParam("session"));
             if(!this.logins.containsKey(sessionUuid))
                 throw new InvalidSessionException();
+            return sessionUuid;
         }
         catch(IllegalArgumentException e) {
             throw new InvalidParamValue("Invalid value for param session", e,"session");
@@ -96,6 +100,16 @@ public class JChatServer {
 
     public Server getServer() {
         return this.config.getServer();
+    }
+
+    public User getUserFromSession(UUID session) {
+        if(!this.logins.containsKey(session))
+            throw new IllegalArgumentException("Invalid session " + session);
+        return this.users.get(this.logins.get(session));
+    }
+
+    public List<Message> getMessages() {
+        return this.messages;
     }
 
     public static Config loadConfig() throws FileNotFoundException {
