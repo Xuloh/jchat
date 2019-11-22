@@ -37,6 +37,7 @@ public class UserListWidget extends TitledPane {
             if(change.wasAdded()) {
                 UserWidget widget = new UserWidget(change.getValueAdded());
                 root.getChildren().add(widget);
+                VBox.setMargin(widget, margin);
             }
         });
 
