@@ -41,13 +41,13 @@ public class MessageDeserializer implements JsonDeserializer<Message> {
             .collect(Collectors.toList());
 
         JsonElement senderElement = src.get("sender");
-        String senderName = senderElement.isJsonNull() ? null : senderElement.getAsString();
+        String senderName = senderElement == null || senderElement.isJsonNull() ? null : senderElement.getAsString();
         User sender = null;
         if(senderName != null && this.users.containsKey(senderName))
             sender = this.users.get(senderName);
 
         JsonElement receiverElement = src.get("receiver");
-        String receiverName = receiverElement.isJsonNull() ? null : receiverElement.getAsString();
+        String receiverName = receiverElement == null || receiverElement.isJsonNull() ? null : receiverElement.getAsString();
         User receiver = null;
         if(receiverName != null && this.users.containsKey(receiverName))
             receiver = this.users.get(receiverName);
