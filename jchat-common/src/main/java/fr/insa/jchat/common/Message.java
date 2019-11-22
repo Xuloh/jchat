@@ -1,5 +1,6 @@
 package fr.insa.jchat.common;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
@@ -22,8 +23,8 @@ public class Message {
     public Message(UUID uuid, String text, List<String> userTags, List<String> links, User sender, User recipient, Calendar date) {
         this.uuid = uuid;
         this.text = text;
-        this.userTags = userTags;
-        this.links = links;
+        this.userTags = userTags == null ? new ArrayList<>() : userTags;
+        this.links = links == null ? new ArrayList<>() : links;
         this.sender = sender;
         this.recipient = recipient;
         this.date = date;
