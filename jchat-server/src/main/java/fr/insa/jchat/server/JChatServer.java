@@ -63,6 +63,14 @@ public class JChatServer {
     }
 
     public void run() {
+        try {
+            new MulticastThread(this).start();
+        }
+        catch(IOException e) {
+            LOGGER.error("Error while trying to start MulticastThread", e);
+            return;
+        }
+
         while(true) {
             LOGGER.info("Listening for a new connection");
             try {
