@@ -47,7 +47,7 @@ public class JChatServer {
 
     private List<Message> messages;
 
-    private BlockingQueue<Message> multicastQueue;
+    private BlockingQueue<Request> multicastQueue;
 
     public JChatServer(Config config) throws IOException {
         this.config = config;
@@ -105,7 +105,7 @@ public class JChatServer {
         return this.logins;
     }
 
-    public BlockingQueue<Message> getMulticastQueue() {
+    public BlockingQueue<Request> getMulticastQueue() {
         return this.multicastQueue;
     }
 

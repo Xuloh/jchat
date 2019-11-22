@@ -3,6 +3,7 @@ package fr.insa.jchat.server;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import fr.insa.jchat.common.Message;
+import fr.insa.jchat.common.Request;
 import fr.insa.jchat.common.deserializer.FileDeserializer;
 import fr.insa.jchat.common.serializer.FileSerializer;
 import fr.insa.jchat.common.serializer.MessageSerializer;
@@ -40,15 +41,14 @@ public class MulticastThread extends Thread {
         LOGGER.info("Starting multicast thread");
         while(true) {
             try {
-                Message message = this.jChatServer.getMulticastQueue().take();
-                String body = gson.toJson(message);
+                Request request = this.jChatServer.getMulticastQueue().take();
                 LOGGER.info(
                     "Sending message to multicast address {} : {}",
                     this.jChatServer.getServer().getMulticastAddress(),
-                    message
+                    request
                 );
 
-                String packetMessage = "MESSAGE\n" + "length:" + body.length() + "\n\n" + body;
+                String packetMessage = Request.format(request);
                 byte[] packetData = packetMessage.getBytes(StandardCharsets.UTF_8);
                 DatagramPacket packet = new DatagramPacket(
                     packetData,
