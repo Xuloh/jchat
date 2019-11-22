@@ -21,7 +21,7 @@ public class MessageWidget extends HBox {
         messageText.setWrapText(true);
 
         DateFormat dateFormat = DateFormat.getDateTimeInstance();
-        Label date = new Label(dateFormat.format(this.message.getDate()));
+        Label date = new Label(dateFormat.format(this.message.getDate().getTime()));
 
         this.getChildren().addAll(username, messageText, date);
         setMargin(username, this.margin);
