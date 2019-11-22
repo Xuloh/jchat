@@ -34,6 +34,8 @@ import java.util.UUID;
 public class ClientThread extends Thread {
     private static final Logger LOGGER = LogManager.getLogger(ClientThread.class);
 
+    private static int threadCounter = 0;
+
     private JChatServer jChatServer;
 
     private Socket clientSocket;
@@ -41,6 +43,7 @@ public class ClientThread extends Thread {
     private Gson gson;
 
     public ClientThread(Socket clientSocket, JChatServer jChatServer) {
+        super("ClientThread-" + threadCounter++);
         this.clientSocket = clientSocket;
         this.jChatServer = jChatServer;
         this.gson = new GsonBuilder()
@@ -57,27 +60,30 @@ public class ClientThread extends Thread {
             BufferedReader socketIn = new BufferedReader(new InputStreamReader(this.clientSocket.getInputStream()));
             PrintStream socketOut = new PrintStream(this.clientSocket.getOutputStream())
         ) {
-            Request response;
+            while(true) {
+                Request response;
 
-            // try catch to handle request errors that uses the I/O streams
-            try {
-                Request request = Request.createRequestFromReader(socketIn);
-                LOGGER.debug("Got request : {}", request);
-                response = this.handleRequest(request);
+                // try catch to handle request errors that uses the I/O streams
+                try {
+                    Request request = Request.createRequestFromReader(socketIn);
+                    LOGGER.debug("Got request : {}", request);
+                    response = this.handleRequest(request);
+                }
+                catch(InvalidRequestException e) {
+                    response = Request.createErrorResponse(e);
+                }
+                catch(NullPointerException e) {
+                    break;
+                }
+
+                LOGGER.debug("Sending response : {}", response);
+
+                Request.sendRequest(response, socketOut);
             }
-            catch(InvalidRequestException e) {
-                response = Request.createErrorResponse(e);
-            }
-
-            LOGGER.debug("Sending response : {}", response);
-
-            Request.sendRequest(response, socketOut);
         }
         catch(IOException e) {
             LOGGER.error("An error occurred in client thread {}", this.getName(), e);
         }
-
-        this.close();
     }
 
     private Request handleRequest(Request request) throws InvalidRequestException {
@@ -109,9 +115,8 @@ public class ClientThread extends Thread {
             User user = new User(username, password, null, "#4F87FF");
             this.jChatServer.getUsers().put(username, user);
 
-            this.welcomeMessage(user.getUsername());
-
             this.multicastNewUser(user);
+            this.welcomeMessage(user.getUsername());
 
             LOGGER.debug("Users : {}", this.jChatServer.getUsers());
         }
@@ -276,15 +281,6 @@ public class ClientThread extends Thread {
         }
         catch(InterruptedException e) {
             LOGGER.error(e.getMessage(), e);
-        }
-    }
-
-    private void close() {
-        try {
-            this.clientSocket.close();
-        }
-        catch(IOException e) {
-            LOGGER.error("An error occurred while closing client socket", e);
         }
     }
 }
