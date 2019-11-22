@@ -1,7 +1,6 @@
 package fr.insa.jchat.common;
 
 import fr.insa.jchat.common.exception.InvalidBodySizeException;
-import fr.insa.jchat.common.exception.InvalidMethodException;
 import fr.insa.jchat.common.exception.InvalidParamValue;
 import fr.insa.jchat.common.exception.InvalidRequestException;
 import fr.insa.jchat.common.exception.MissingBodyException;
@@ -13,6 +12,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -27,7 +27,7 @@ public class Request {
 
     private String body;
 
-    public static Request createRequestFromReader(BufferedReader in) throws IOException, InvalidParamValue, InvalidBodySizeException, InvalidMethodException {
+    public static Request createRequestFromReader(BufferedReader in) throws IOException, InvalidRequestException {
         Request request = new Request();
 
         // read request method, discarding any garbage that may have stayed in the input stream
@@ -41,7 +41,7 @@ public class Request {
                 validMethod = true;
             }
             catch(IllegalArgumentException e) {
-                LOGGER.debug("Found garbage in the BufferedReader : {}", line);
+                LOGGER.warn("Found garbage in the BufferedReader : {}", line);
             }
         }
 
@@ -49,6 +49,8 @@ public class Request {
         while((line = in.readLine()).length() > 0) {
             String[] param = line.split(":", 2);
             LOGGER.debug("Param : {}", (Object)param);
+            if(param.length != 2)
+                throw new InvalidRequestException("Malformed request, params should have the form <key>:<value>, got " + Arrays.toString(param));
             request.setParam(param[0], param[1]);
         }
 
@@ -134,7 +136,6 @@ public class Request {
         if(request.body != null && request.body.length() > 0)
             builder.append(request.body);
 
-//        LOGGER.debug("Formatted request : {}", builder.toString());
         return builder.toString();
     }
 
