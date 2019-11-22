@@ -3,7 +3,6 @@ package fr.insa.jchat.client;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.sun.javafx.collections.ObservableMapWrapper;
 import fr.insa.jchat.common.Message;
 import fr.insa.jchat.common.Request;
 import fr.insa.jchat.common.Server;
@@ -13,6 +12,7 @@ import fr.insa.jchat.common.deserializer.MessageDeserializer;
 import fr.insa.jchat.common.exception.InvalidBodySizeException;
 import fr.insa.jchat.common.exception.InvalidMethodException;
 import fr.insa.jchat.common.exception.InvalidParamValue;
+import fr.insa.jchat.common.exception.InvalidRequestException;
 import fr.insa.jchat.common.serializer.FileSerializer;
 import fr.insa.jchat.common.serializer.MessageSerializer;
 import javafx.collections.FXCollections;
@@ -30,20 +30,24 @@ import java.io.PrintStream;
 import java.lang.reflect.Type;
 import java.net.Socket;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class ActionController {
     private static final Logger LOGGER = LogManager.getLogger(ActionController.class);
 
     private static JChatClient jChatClient;
 
-    private static String ip;
+    private static String ip = null;
 
-    private static int port;
+    private static Integer port = null;
 
     private static UUID session;
+
+    private static Socket socket;
+
+    private static PrintStream socketOut;
+
+    private static BufferedReader socketIn;
 
     public static ObservableMap<String, User> users = FXCollections.synchronizedObservableMap(FXCollections.observableHashMap());
 
@@ -60,6 +64,15 @@ public class ActionController {
 
     public static void handleAction(String action) {
         try {
+            ensureSocket();
+        }
+        catch(IOException e) {
+            LOGGER.error("An error occurred while trying to connect to {}:{}", ip, port, e);
+            jChatClient.getConnectPane().displayMessage("Could not connect to server :(", true);
+            return;
+        }
+
+        try {
             switch(action) {
                 case "register":
                     doRegister();
@@ -72,12 +85,12 @@ public class ActionController {
                     break;
             }
         }
-        catch(IOException | InvalidParamValue | InvalidBodySizeException | InvalidMethodException e) {
+        catch(IOException | InvalidRequestException e) {
             LOGGER.error(e.getMessage(), e);
         }
     }
 
-    public static void doRegister() throws InvalidMethodException, InvalidParamValue, InvalidBodySizeException, IOException {
+    public static void doRegister() throws InvalidRequestException, IOException {
         LOGGER.info("Register");
 
         Request request = new Request();
@@ -95,7 +108,7 @@ public class ActionController {
             jChatClient.getConnectPane().displayMessage(response.getParam("errorName"), true);
     }
 
-    public static void doLogin() throws InvalidMethodException, InvalidParamValue, InvalidBodySizeException, IOException {
+    public static void doLogin() throws InvalidRequestException, IOException {
         LOGGER.info("Login");
 
         String username = jChatClient.getConnectPane().getValue("username");
@@ -125,7 +138,7 @@ public class ActionController {
             jChatClient.getConnectPane().displayMessage(response.getParam("errorName"), true);
     }
 
-    public static void doSendMessage() throws InvalidMethodException, InvalidParamValue, InvalidBodySizeException, IOException {
+    public static void doSendMessage() throws InvalidRequestException, IOException {
         LOGGER.info("Sending message");
 
         String messageText = jChatClient.getServerPane().getNewMessageText();
@@ -143,7 +156,7 @@ public class ActionController {
         LOGGER.debug("Got response : {}", response);
     }
 
-    public static Server getServerInfo() throws InvalidMethodException, InvalidParamValue, InvalidBodySizeException, IOException {
+    public static Server getServerInfo() throws InvalidRequestException, IOException {
         Request serverRequest = new Request();
         serverRequest.setMethod(Request.Method.GET);
         serverRequest.setParam("resource", "SERVER_INFO");
@@ -153,7 +166,7 @@ public class ActionController {
         return server;
     }
 
-    public static User getUserInfo(String username) throws InvalidMethodException, InvalidParamValue, InvalidBodySizeException, IOException {
+    public static User getUserInfo(String username) throws InvalidRequestException, IOException {
         Request userRequest = new Request();
         userRequest.setMethod(Request.Method.GET);
         userRequest.setParam("session", session.toString());
@@ -165,7 +178,7 @@ public class ActionController {
         return user;
     }
 
-    public static List<User> getUserList() throws InvalidMethodException, InvalidParamValue, InvalidBodySizeException, IOException {
+    public static List<User> getUserList() throws InvalidRequestException, IOException {
         Request userListRequest = new Request();
         userListRequest.setMethod(Request.Method.GET);
         userListRequest.setParam("session", session.toString());
@@ -178,7 +191,7 @@ public class ActionController {
         return userList;
     }
 
-    public static List<Message> getMessageHistory() throws InvalidMethodException, InvalidParamValue, InvalidBodySizeException, IOException {
+    public static List<Message> getMessageHistory() throws InvalidRequestException, IOException {
         Request messageHistoryRequest = new Request();
         messageHistoryRequest.setMethod(Request.Method.GET);
         messageHistoryRequest.setParam("session", session.toString());
@@ -190,20 +203,11 @@ public class ActionController {
         return messages;
     }
 
-    public static Request sendRequest(Request request) throws InvalidMethodException, InvalidParamValue, InvalidBodySizeException, IOException {
-        ip = jChatClient.getConnectPane().getValue("ip");
-        port = Integer.parseInt(jChatClient.getConnectPane().getValue("port"));
-
-        try(
-            Socket socket = new Socket(ip, port);
-            PrintStream socketOut = new PrintStream(socket.getOutputStream());
-            BufferedReader socketIn = new BufferedReader(new InputStreamReader(socket.getInputStream()))
-        ) {
-            Request.sendRequest(request, socketOut);
-            Request response = Request.createRequestFromReader(socketIn);
-            LOGGER.info("{}", response);
-            return response;
-        }
+    public static Request sendRequest(Request request) throws InvalidRequestException, IOException {
+        Request.sendRequest(request, socketOut);
+        Request response = Request.createRequestFromReader(socketIn);
+        LOGGER.info("{}", response);
+        return response;
     }
 
     public static void spawnMulticastListener(Server server) throws IOException {
@@ -223,5 +227,22 @@ public class ActionController {
                 users.put(user.getUsername(), user);
             }
         });
+    }
+
+    public static void ensureSocket() throws IOException {
+        if(ip == null)
+            ip = jChatClient.getConnectPane().getValue("ip");
+
+        if(port == null)
+            port = Integer.parseInt(jChatClient.getConnectPane().getValue("port"));
+
+        if(socket != null && (socket.isInputShutdown() || socket.isOutputShutdown()))
+            socket.close();
+
+        if(socket == null || socket.isClosed()) {
+            socket = new Socket(ip, port);
+            socketOut = new PrintStream(socket.getOutputStream());
+            socketIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        }
     }
 }
