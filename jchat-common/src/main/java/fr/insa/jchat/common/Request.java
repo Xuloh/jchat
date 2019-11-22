@@ -30,23 +30,26 @@ public class Request {
     public static Request createRequestFromReader(BufferedReader in) throws IOException, InvalidParamValue, InvalidBodySizeException, InvalidMethodException {
         Request request = new Request();
 
-        // read request method
-        String line = in.readLine();
-        LOGGER.debug("Method : {}", line);
-        try {
-            request.setMethod(Request.Method.valueOf(line));
-        }
-        catch(IllegalArgumentException e) {
-            throw new InvalidMethodException(line);
+        // read request method, discarding any garbage that may have stayed in the input stream
+        String line;
+        boolean validMethod = false;
+
+        while(!validMethod && (line = in.readLine()) != null) {
+            try {
+                request.setMethod(Request.Method.valueOf(line));
+                LOGGER.debug("Method : {}", line);
+                validMethod = true;
+            }
+            catch(IllegalArgumentException e) {
+                LOGGER.debug("Found garbage in the BufferedReader : {}", line);
+            }
         }
 
         // read request params
-        line = in.readLine();
-        while(line.length() > 0) {
+        while((line = in.readLine()).length() > 0) {
             String[] param = line.split(":", 2);
             LOGGER.debug("Param : {}", (Object)param);
             request.setParam(param[0], param[1]);
-            line = in.readLine();
         }
 
         // handle body if length param is present
