@@ -20,6 +20,10 @@ public class Message {
 
     private Calendar date;
 
+    public static Message fromText(String text) {
+        return new Message(UUID.randomUUID(), text, null, null, null,null, Calendar.getInstance());
+    }
+
     public Message(UUID uuid, String text, List<String> userTags, List<String> links, User sender, User recipient, Calendar date) {
         this.uuid = uuid;
         this.text = text;
