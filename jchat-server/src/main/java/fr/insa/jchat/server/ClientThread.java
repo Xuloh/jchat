@@ -217,6 +217,7 @@ public class ClientThread extends Thread {
         try {
             Message message = this.gson.fromJson(request.getBody(), Message.class);
             User user = this.jChatServer.getUserFromSession(session);
+            message.setUuid(UUID.randomUUID());
             message.setSender(user);
             message.setDate(Calendar.getInstance());
             this.jChatServer.getMulticastQueue().put(message);
