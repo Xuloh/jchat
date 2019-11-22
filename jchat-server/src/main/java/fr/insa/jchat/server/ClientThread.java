@@ -108,6 +108,9 @@ public class ClientThread extends Thread {
 
             User user = new User(username, password, null, "#4F87FF");
             this.jChatServer.getUsers().put(username, user);
+
+            this.welcomeMessage(user.getUsername());
+
             LOGGER.debug("Users : {}", this.jChatServer.getUsers());
         }
 
@@ -220,7 +223,14 @@ public class ClientThread extends Thread {
             message.setUuid(UUID.randomUUID());
             message.setSender(user);
             message.setDate(Calendar.getInstance());
-            this.jChatServer.getMulticastQueue().put(message);
+
+            String body = this.gson.toJson(message);
+            Request multicastRequest = new Request();
+            request.setMethod(Request.Method.MESSAGE);
+            request.setParam("length", Integer.toString(body.length()));
+            request.setBody(body);
+
+            this.jChatServer.getMulticastQueue().put(multicastRequest);
             this.jChatServer.getMessages().add(message);
         }
         catch(JsonParseException e) {
@@ -233,6 +243,24 @@ public class ClientThread extends Thread {
         Request response = new Request();
         response.setMethod(Request.Method.OK);
         return response;
+    }
+
+    private void welcomeMessage(String username) {
+        Message message = Message.fromText("Welcome here " + username);
+        String body = this.gson.toJson(message);
+
+        Request request = new Request();
+        request.setMethod(Request.Method.MESSAGE);
+        request.setParam("length", Integer.toString(body.length()));
+        request.setBody(body);
+
+        this.jChatServer.getMessages().add(message);
+        try {
+            this.jChatServer.getMulticastQueue().put(request);
+        }
+        catch(InterruptedException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
     }
 
     private void close() {
