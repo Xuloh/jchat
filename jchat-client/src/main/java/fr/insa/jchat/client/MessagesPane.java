@@ -42,6 +42,7 @@ public class MessagesPane extends BorderPane {
                   this.root.getChildren().add(messageWidget);
                   VBox.setMargin(messageWidget, this.margin);
               });
+        this.scrollMessages.setVvalue(1.0);
     }
 
     public void addMessages(List<Message> messages) {
@@ -51,6 +52,7 @@ public class MessagesPane extends BorderPane {
                     this.root.getChildren().add(messageWidget);
                     VBox.setMargin(messageWidget, this.margin);
                 });
+        this.scrollMessages.setVvalue(1.0);
     }
 
     public String getNewMessageText() {
