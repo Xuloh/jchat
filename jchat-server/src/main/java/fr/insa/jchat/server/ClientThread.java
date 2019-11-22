@@ -66,7 +66,7 @@ public class ClientThread extends Thread {
                 // try catch to handle request errors that uses the I/O streams
                 try {
                     Request request = Request.createRequestFromReader(socketIn);
-                    LOGGER.debug("Got request : {}", request);
+                    LOGGER.info("Got request : {}", request);
                     response = this.handleRequest(request);
                 }
                 catch(InvalidRequestException e) {
@@ -76,7 +76,7 @@ public class ClientThread extends Thread {
                     break;
                 }
 
-                LOGGER.debug("Sending response : {}", response);
+                LOGGER.info("Sending response : {}", response);
 
                 Request.sendRequest(response, socketOut);
             }
