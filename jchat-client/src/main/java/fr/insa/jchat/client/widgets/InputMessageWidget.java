@@ -17,7 +17,6 @@ public class InputMessageWidget extends HBox {
         this.margin = new Insets(5, 5, 5, 0);
         this.textField = new InputTextField("Say something :D");
         this.sendButton = new ActionButton("Send", "Send your message", "send-message");
-        this.sendButton.addEventHandler(ActionEvent.ACTION, event -> this.textField.setText(""));
         this.textField.addEventHandler(KeyEvent.KEY_RELEASED, event -> {
             if(event.getCode() == KeyCode.ENTER)
                 this.sendButton.fire();
@@ -28,6 +27,8 @@ public class InputMessageWidget extends HBox {
     }
 
     public String getText() {
-        return this.textField.getText();
+        String text = this.textField.getText();
+        this.textField.setText("");
+        return text;
     }
 }
