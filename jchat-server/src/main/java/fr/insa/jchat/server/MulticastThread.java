@@ -1,10 +1,15 @@
 package fr.insa.jchat.server;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import fr.insa.jchat.common.Message;
+import fr.insa.jchat.common.deserializer.FileDeserializer;
+import fr.insa.jchat.common.serializer.FileSerializer;
+import fr.insa.jchat.common.serializer.MessageSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.MulticastSocket;
@@ -23,7 +28,11 @@ public class MulticastThread extends Thread {
         this.jChatServer = jChatServer;
         this.multicastSocket = new MulticastSocket(this.jChatServer.getServer().getMulticastPort());
         this.multicastSocket.joinGroup(this.jChatServer.getServer().getMulticastAddress());
-        this.gson = new Gson();
+        this.gson = new GsonBuilder()
+            .registerTypeAdapter(File.class, new FileSerializer())
+            .registerTypeAdapter(File.class, new FileDeserializer())
+            .registerTypeAdapter(Message.class, new MessageSerializer())
+            .create();
     }
 
     @Override
