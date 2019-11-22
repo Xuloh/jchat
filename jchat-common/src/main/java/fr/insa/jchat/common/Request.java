@@ -112,7 +112,7 @@ public class Request {
 
     public static void sendRequest(Request request, PrintStream out) {
         String requestStr = format(request);
-        out.println(requestStr);
+        out.print(requestStr);
     }
 
     public static String format(Request request) {
@@ -123,13 +123,15 @@ public class Request {
             builder
                 .append(param)
                 .append(':')
-                .append(request.params.get(param));
+                .append(request.params.get(param))
+                .append('\n');
         }
         builder.append('\n');
 
         if(request.body != null && request.body.length() > 0)
             builder.append(request.body);
 
+//        LOGGER.debug("Formatted request : {}", builder.toString());
         return builder.toString();
     }
 
@@ -184,6 +186,7 @@ public class Request {
         USER_STATUS,
         DISCOVER,
         OK,
-        ERROR
+        ERROR,
+        NEW_USER
     }
 }
