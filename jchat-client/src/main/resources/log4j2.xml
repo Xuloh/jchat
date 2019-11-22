@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Configuration status="info">
     <Properties>
-        <Property name="prefix">[%-5level] %d{HH:mm:ss}</Property>
+        <Property name="prefix">[%-5level] %d{HH:mm:ss} (%threadName-%threadId)</Property>
         <Property name="suffix">%m%n%exception</Property>
     </Properties>
 
