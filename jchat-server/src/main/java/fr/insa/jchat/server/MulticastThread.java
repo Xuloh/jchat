@@ -26,6 +26,7 @@ public class MulticastThread extends Thread {
     private Gson gson;
 
     public MulticastThread(JChatServer jChatServer) throws IOException {
+        super("MulticastThread");
         this.jChatServer = jChatServer;
         this.multicastSocket = new MulticastSocket(this.jChatServer.getServer().getMulticastPort());
         this.multicastSocket.joinGroup(this.jChatServer.getServer().getMulticastAddress());
