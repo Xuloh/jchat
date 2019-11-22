@@ -111,6 +111,8 @@ public class ClientThread extends Thread {
 
             this.welcomeMessage(user.getUsername());
 
+            this.multicastNewUser(user);
+
             LOGGER.debug("Users : {}", this.jChatServer.getUsers());
         }
 
@@ -226,9 +228,9 @@ public class ClientThread extends Thread {
 
             String body = this.gson.toJson(message);
             Request multicastRequest = new Request();
-            request.setMethod(Request.Method.MESSAGE);
-            request.setParam("length", Integer.toString(body.length()));
-            request.setBody(body);
+            multicastRequest.setMethod(Request.Method.MESSAGE);
+            multicastRequest.setParam("length", Integer.toString(body.length()));
+            multicastRequest.setBody(body);
 
             this.jChatServer.getMulticastQueue().put(multicastRequest);
             this.jChatServer.getMessages().add(message);
@@ -255,6 +257,20 @@ public class ClientThread extends Thread {
         request.setBody(body);
 
         this.jChatServer.getMessages().add(message);
+        try {
+            this.jChatServer.getMulticastQueue().put(request);
+        }
+        catch(InterruptedException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    private void multicastNewUser(User user) {
+        String body = this.gson.toJson(user);
+        Request request = new Request();
+        request.setMethod(Request.Method.NEW_USER);
+        request.setParam("length", Integer.toString(body.length()));
+        request.setBody(body);
         try {
             this.jChatServer.getMulticastQueue().put(request);
         }
