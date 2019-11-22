@@ -13,6 +13,7 @@ import fr.insa.jchat.common.exception.InvalidBodySizeException;
 import fr.insa.jchat.common.exception.InvalidMethodException;
 import fr.insa.jchat.common.exception.InvalidParamValue;
 import fr.insa.jchat.common.serializer.FileSerializer;
+import fr.insa.jchat.common.serializer.MessageSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -45,6 +46,7 @@ public class ActionController {
         .registerTypeAdapter(File.class, new FileSerializer())
         .registerTypeAdapter(File.class, new FileDeserializer())
         .registerTypeAdapter(Message.class, new MessageDeserializer(users))
+        .registerTypeAdapter(Message.class, new MessageSerializer())
         .create();
 
     public static void setJChatClient(JChatClient jChatClient) {
@@ -59,6 +61,9 @@ public class ActionController {
                     break;
                 case "login":
                     doLogin();
+                    break;
+                case "send-message":
+                    doSendMessage();
                     break;
             }
         }
@@ -112,6 +117,24 @@ public class ActionController {
         }
         else if(response.getMethod() == Request.Method.ERROR)
             jChatClient.getConnectPane().displayMessage(response.getParam("errorName"), true);
+    }
+
+    public static void doSendMessage() throws InvalidMethodException, InvalidParamValue, InvalidBodySizeException, IOException {
+        LOGGER.info("Sending message");
+
+        String messageText = jChatClient.getServerPane().getNewMessageText();
+        Message message = new Message(null, messageText, null, null, null, null, null);
+        String body = gson.toJson(message);
+
+        Request messageRequest = new Request();
+        messageRequest.setMethod(Request.Method.MESSAGE);
+        messageRequest.setParam("session", session.toString());
+        messageRequest.setParam("length", Integer.toString(body.length()));
+        messageRequest.setBody(body);
+
+        Request response = sendRequest(messageRequest);
+
+        LOGGER.debug("Got response : {}", response);
     }
 
     public static Server getServerInfo() throws InvalidMethodException, InvalidParamValue, InvalidBodySizeException, IOException {

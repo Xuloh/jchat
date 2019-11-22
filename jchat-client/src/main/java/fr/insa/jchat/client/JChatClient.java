@@ -33,11 +33,16 @@ public class JChatClient extends Application {
         primaryStage.show();
     }
 
+    public ServerPane getServerPane() {
+        return this.serverPane;
+    }
+
     public void setServerPane(ServerPane serverPane) {
+        this.serverPane = serverPane;
         this.root.getChildren().remove(this.connectPane);
-        serverPane.prefWidthProperty().bind(this.root.widthProperty());
-        serverPane.prefHeightProperty().bind(this.root.heightProperty());
-        this.root.getChildren().add(serverPane);
+        this.serverPane.prefWidthProperty().bind(this.root.widthProperty());
+        this.serverPane.prefHeightProperty().bind(this.root.heightProperty());
+        this.root.getChildren().add(this.serverPane);
     }
 
     public void resetConnectPane() {

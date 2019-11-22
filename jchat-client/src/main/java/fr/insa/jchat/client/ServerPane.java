@@ -44,4 +44,8 @@ public class ServerPane extends BorderPane {
     public void addMessages(Message... messages) {
         this.messagesPane.addMessages(messages);
     }
+
+    public String getNewMessageText() {
+        return this.messagesPane.getNewMessageText();
+    }
 }
