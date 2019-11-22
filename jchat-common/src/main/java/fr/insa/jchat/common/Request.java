@@ -111,15 +111,26 @@ public class Request {
     }
 
     public static void sendRequest(Request request, PrintStream out) {
-        out.println(request.method);
+        String requestStr = format(request);
+        out.println(requestStr);
+    }
 
-        for(String param : request.params.keySet())
-            out.println(param + ":" + request.params.get(param));
+    public static String format(Request request) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(request.getMethod()).append('\n');
 
-        out.println();
+        for(String param : request.params.keySet()) {
+            builder
+                .append(param)
+                .append(':')
+                .append(request.params.get(param));
+        }
+        builder.append('\n');
 
         if(request.body != null && request.body.length() > 0)
-            out.println(request.body);
+            builder.append(request.body);
+
+        return builder.toString();
     }
 
     public Request() {
