@@ -21,7 +21,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.Map;
 
-public class MulticastListenerTask extends Task<Message> {
+public class MulticastListenerTask extends Task<Object> {
     private static final Logger LOGGER = LogManager.getLogger(MulticastListenerTask.class);
 
     private static final int BUFFER_SIZE = 1024 * 1024 * 10;
@@ -41,7 +41,7 @@ public class MulticastListenerTask extends Task<Message> {
     }
 
     @Override
-    protected Message call() throws Exception {
+    protected Object call() throws Exception {
         LOGGER.info("Starting multicast background task");
         while(true) {
             if(Thread.interrupted())
@@ -60,6 +60,8 @@ public class MulticastListenerTask extends Task<Message> {
                 case MESSAGE:
                     this.handleMessage(request);
                     break;
+                case NEW_USER:
+                    this.handleNewUser(request);
                 default:
                     break;
             }
@@ -70,5 +72,10 @@ public class MulticastListenerTask extends Task<Message> {
     private void handleMessage(Request request) {
         Message message = this.gson.fromJson(request.getBody(), Message.class);
         this.updateValue(message);
+    }
+
+    private void handleNewUser(Request request) {
+        User user = this.gson.fromJson(request.getBody(), User.class);
+        this.updateValue(user);
     }
 }

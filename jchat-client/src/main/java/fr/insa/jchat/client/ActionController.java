@@ -3,6 +3,7 @@ package fr.insa.jchat.client;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.sun.javafx.collections.ObservableMapWrapper;
 import fr.insa.jchat.common.Message;
 import fr.insa.jchat.common.Request;
 import fr.insa.jchat.common.Server;
@@ -14,6 +15,8 @@ import fr.insa.jchat.common.exception.InvalidMethodException;
 import fr.insa.jchat.common.exception.InvalidParamValue;
 import fr.insa.jchat.common.serializer.FileSerializer;
 import fr.insa.jchat.common.serializer.MessageSerializer;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableMap;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import org.apache.logging.log4j.LogManager;
@@ -26,7 +29,6 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.lang.reflect.Type;
 import java.net.Socket;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -43,7 +45,7 @@ public class ActionController {
 
     private static UUID session;
 
-    private static Map<String, User> users = new ConcurrentHashMap<>();
+    public static ObservableMap<String, User> users = FXCollections.synchronizedObservableMap(FXCollections.observableHashMap());
 
     private static Gson gson = new GsonBuilder()
         .registerTypeAdapter(File.class, new FileSerializer())
@@ -116,7 +118,7 @@ public class ActionController {
             List<Message> messages = getMessageHistory();
             spawnMulticastListener(server);
 
-            ServerPane serverPane = new ServerPane(server, user, users, messages, ip);
+            ServerPane serverPane = new ServerPane(server, user, messages, ip);
             jChatClient.setServerPane(serverPane);
         }
         else if(response.getMethod() == Request.Method.ERROR)
@@ -206,15 +208,20 @@ public class ActionController {
 
     public static void spawnMulticastListener(Server server) throws IOException {
         var multicastListenerTask = new MulticastListenerTask(server.getMulticastAddress(), server.getMulticastPort(), users);
-        Service<Message> multicastListener = new Service<Message>() {
+        Service<Object> multicastListener = new Service<>() {
             @Override
-            protected Task<Message> createTask() {
+            protected Task<Object> createTask() {
                 return multicastListenerTask;
             }
         };
         multicastListener.start();
         multicastListenerTask.valueProperty().addListener((observable, oldValue, newValue) -> {
-            jChatClient.getServerPane().addMessages(newValue);
+            if(newValue instanceof Message)
+                jChatClient.getServerPane().addMessages((Message)newValue);
+            else if(newValue instanceof User) {
+                User user = (User)newValue;
+                users.put(user.getUsername(), user);
+            }
         });
     }
 }

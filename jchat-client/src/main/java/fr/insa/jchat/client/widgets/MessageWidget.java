@@ -16,7 +16,12 @@ public class MessageWidget extends HBox {
         this.message = message;
         this.margin = new Insets(5, 0, 5, 5);
 
-        Label username = new Label(this.message.getSender().getUsername());
+        Label username = new Label();
+        if(this.message.getSender() != null)
+            username.setText(this.message.getSender().getUsername());
+        else
+            username.setText("Server");
+
         Label messageText = new Label(this.message.getText());
         messageText.setWrapText(true);
 
