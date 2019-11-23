@@ -53,7 +53,7 @@ public class ActionController {
 
     private static boolean stopKeepAliveThread = false;
 
-    private static final long KEEP_ALIVE_TIMEOUT = 120_000L; // in millis
+    private static final long KEEP_ALIVE_TIMEOUT = 120_000L; // 2 mn in millis
 
     private static MulticastListenerTask multicastListenerTask;
 
