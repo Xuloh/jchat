@@ -7,14 +7,22 @@ import javafx.geometry.Insets;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.VBox;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class UserListWidget extends ScrollPane {
+    private static final Logger LOGGER = LogManager.getLogger(UserListWidget.class);
+
     private Map<String, UserWidget> userWidgetMap;
 
     private Insets margin;
+
+    private VBox onlineVBox;
+
+    private VBox offlineVBox;
 
     public UserListWidget() {
         this.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -26,14 +34,14 @@ public class UserListWidget extends ScrollPane {
 
         TitledPane onlinePane = new TitledPane();
         onlinePane.setText("Online");
-        VBox onlineVBox = new VBox();
-        onlinePane.setContent(onlineVBox);
+        this.onlineVBox = new VBox();
+        onlinePane.setContent(this.onlineVBox);
         VBox.setMargin(onlinePane, this.margin);
 
         TitledPane offlinePane = new TitledPane();
         offlinePane.setText("Offline");
-        VBox offlineVBox = new VBox();
-        offlinePane.setContent(offlineVBox);
+        this.offlineVBox = new VBox();
+        offlinePane.setContent(this.offlineVBox);
         VBox.setMargin(offlinePane, this.margin);
 
         root.getChildren().addAll(onlinePane, offlinePane);
@@ -45,37 +53,37 @@ public class UserListWidget extends ScrollPane {
                 this.userWidgetMap.put(user.getUsername(), userWidget);
 
                 if(user.getStatus() == User.Status.ONLINE)
-                    onlineVBox.getChildren().add(userWidget);
+                    this.onlineVBox.getChildren().add(userWidget);
                 else if(user.getStatus() == User.Status.OFFLINE)
-                    offlineVBox.getChildren().add(userWidget);
+                    this.offlineVBox.getChildren().add(userWidget);
 
                 VBox.setMargin(userWidget, margin);
             });
 
         ActionController.users.addListener((MapChangeListener<String, User>)change -> {
             User user = change.getValueAdded();
-
-            if(change.wasAdded()) {
-                UserWidget userWidget;
-
-                if(!this.userWidgetMap.containsKey(user.getUsername())) {
-                    userWidget = new UserWidget(change.getValueAdded());
-                    VBox.setMargin(userWidget, margin);
-                }
-                else
-                    userWidget = this.userWidgetMap.get(user.getUsername());
-
-                if(user.getStatus() == User.Status.OFFLINE) {
-                    onlineVBox.getChildren().remove(userWidget);
-                    offlineVBox.getChildren().add(userWidget);
-                }
-                else {
-                    offlineVBox.getChildren().remove(userWidget);
-                    onlineVBox.getChildren().add(userWidget);
-                }
-            }
+            if(change.wasAdded())
+                this.update(user);
         });
 
         this.setContent(root);
+    }
+
+    public synchronized void update(User user) {
+        LOGGER.debug("Updating user list : {}", user);
+        UserWidget userWidget;
+
+        if(!this.userWidgetMap.containsKey(user.getUsername())) {
+            userWidget = new UserWidget(user);
+            this.userWidgetMap.put(user.getUsername(), userWidget);
+            VBox.setMargin(userWidget, margin);
+        }
+        else
+            userWidget = this.userWidgetMap.get(user.getUsername());
+
+        if(user.getStatus() == User.Status.OFFLINE)
+            this.offlineVBox.getChildren().add(userWidget);
+        else
+            this.onlineVBox.getChildren().add(userWidget);
     }
 }
