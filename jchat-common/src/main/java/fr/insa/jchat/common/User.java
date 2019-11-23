@@ -11,11 +11,14 @@ public class User {
 
     private String color;
 
-    public User(String username, String password, File image, String color) {
+    private Status status;
+
+    public User(String username, String password, File image, String color, Status status) {
         this.username = username;
         this.password = password;
         this.image = image;
         this.color = color;
+        this.status = status;
     }
 
     public String getUsername() {
@@ -54,6 +57,15 @@ public class User {
         return this;
     }
 
+    public Status getStatus() {
+        return this.status;
+    }
+
+    public User setStatus(Status status) {
+        this.status = status;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if(this == o)
@@ -73,6 +85,11 @@ public class User {
 
     @Override
     public String toString() {
-        return "User{" + "username='" + username + '\'' + ", password='" + password + '\'' + ", image=" + image + ", color='" + color + '\'' + '}';
+        return "User{" + "username='" + username + '\'' + ", password='" + password + '\'' + ", image=" + image + ", color='" + color + '\'' + ", status=" + status + '}';
+    }
+
+    public enum Status {
+        ONLINE,
+        OFFLINE
     }
 }
