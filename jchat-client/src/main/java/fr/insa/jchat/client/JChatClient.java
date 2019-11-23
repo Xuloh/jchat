@@ -33,6 +33,11 @@ public class JChatClient extends Application {
         primaryStage.show();
     }
 
+    @Override
+    public void stop() throws Exception {
+        ActionController.doDisconnect();
+    }
+
     public ServerPane getServerPane() {
         return this.serverPane;
     }
