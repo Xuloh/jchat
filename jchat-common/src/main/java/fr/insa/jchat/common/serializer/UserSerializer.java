@@ -18,6 +18,7 @@ public class UserSerializer implements JsonSerializer<User> {
         result.add("password", new JsonPrimitive(user.getPassword()));
         result.add("image", new JsonPrimitive(user.getImage().getAbsolutePath()));
         result.add("color", new JsonPrimitive(user.getColor()));
+        result.add("status", new JsonPrimitive(user.getStatus().toString()));
         return result;
     }
 }
