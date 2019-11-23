@@ -28,6 +28,7 @@ import java.lang.reflect.Type;
 import java.net.Socket;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Executors;
 
 public class ActionController {
     private static final Logger LOGGER = LogManager.getLogger(ActionController.class);
@@ -53,6 +54,8 @@ public class ActionController {
     private static boolean stopKeepAliveThread = false;
 
     private static final long KEEP_ALIVE_TIMEOUT = 120_000L; // in millis
+
+    private static MulticastListenerTask multicastListenerTask;
 
     public static ObservableMap<String, User> users = FXCollections.synchronizedObservableMap(FXCollections.observableHashMap());
 
@@ -87,6 +90,9 @@ public class ActionController {
                     break;
                 case "send-message":
                     doSendMessage();
+                    break;
+                case "disconnect":
+                    doDisconnect();
                     break;
             }
         }
@@ -131,8 +137,9 @@ public class ActionController {
             jChatClient.getConnectPane().displayMessage("Successfully logged in");
 
             Server server = getServerInfo();
+            setStatus(User.Status.ONLINE);
             User user = getUserInfo(username);
-            List<User> users = getUserList();
+            getUserList();
             List<Message> messages = getMessageHistory();
             spawnMulticastListener(server);
 
@@ -161,6 +168,17 @@ public class ActionController {
         LOGGER.debug("Got response : {}", response);
     }
 
+    public static void doDisconnect() throws InvalidRequestException, IOException {
+        if(socket != null && !socket.isClosed()) {
+            LOGGER.info("Disconnecting");
+            stopKeepAliveThread = true;
+            keepAliveThread.interrupt();
+            multicastListenerTask.closeSocket();
+            setStatus(User.Status.OFFLINE);
+            socket.close();
+        }
+    }
+
     public static Server getServerInfo() throws InvalidRequestException, IOException {
         Request serverRequest = new Request();
         serverRequest.setMethod(Request.Method.GET);
@@ -183,7 +201,7 @@ public class ActionController {
         return user;
     }
 
-    public static List<User> getUserList() throws InvalidRequestException, IOException {
+    public static void getUserList() throws InvalidRequestException, IOException {
         Request userListRequest = new Request();
         userListRequest.setMethod(Request.Method.GET);
         userListRequest.setParam("session", session.toString());
@@ -193,7 +211,6 @@ public class ActionController {
         Type userListType = new TypeToken<List<User>>() {}.getType();
         List<User> userList = gson.fromJson(response.getBody(), userListType);
         userList.forEach(user -> users.put(user.getUsername(), user));
-        return userList;
     }
 
     public static List<Message> getMessageHistory() throws InvalidRequestException, IOException {
@@ -208,6 +225,15 @@ public class ActionController {
         return messages;
     }
 
+    public static void setStatus(User.Status status) throws InvalidRequestException, IOException {
+        Request request = new Request();
+        request.setMethod(Request.Method.USER_STATUS);
+        request.setParam("session", session.toString());
+        request.setParam("status", status.toString());
+
+        sendRequest(request);
+    }
+
     public static Request sendRequest(Request request) throws InvalidRequestException, IOException {
         synchronized(mutex) {
             keepAliveThread.interrupt();
@@ -220,13 +246,14 @@ public class ActionController {
     }
 
     public static void spawnMulticastListener(Server server) throws IOException {
-        var multicastListenerTask = new MulticastListenerTask(server.getMulticastAddress(), server.getMulticastPort(), users);
+        multicastListenerTask = new MulticastListenerTask(server.getMulticastAddress(), server.getMulticastPort(), users);
         Service<Object> multicastListener = new Service<>() {
             @Override
             protected Task<Object> createTask() {
                 return multicastListenerTask;
             }
         };
+        multicastListener.setExecutor(Executors.newSingleThreadExecutor(r -> new Thread(r, "MulticastListener")));
         multicastListener.start();
         multicastListenerTask.valueProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue instanceof Message)
