@@ -8,6 +8,7 @@ import fr.insa.jchat.common.User;
 import fr.insa.jchat.common.deserializer.FileDeserializer;
 import fr.insa.jchat.common.deserializer.MessageDeserializer;
 import fr.insa.jchat.common.serializer.FileSerializer;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,21 +28,18 @@ public class MulticastListenerTask extends Task<Object> {
 
     private static final int BUFFER_SIZE = 1024 * 1024 * 10;
 
-    private Map<String, User> users;
-
     private MulticastSocket multicastSocket;
 
     private Gson gson;
 
-    public MulticastListenerTask(InetAddress address, int port, Map<String, User> users) throws IOException {
+    public MulticastListenerTask(InetAddress address, int port) throws IOException {
         this.multicastSocket = new MulticastSocket(port);
         this.multicastSocket.joinGroup(address);
         this.gson = new GsonBuilder()
             .registerTypeAdapter(File.class, new FileSerializer())
             .registerTypeAdapter(File.class, new FileDeserializer())
-            .registerTypeAdapter(Message.class, new MessageDeserializer(users))
+            .registerTypeAdapter(Message.class, new MessageDeserializer(ActionController.users))
             .create();
-        this.users = users;
     }
 
     @Override
@@ -89,19 +87,18 @@ public class MulticastListenerTask extends Task<Object> {
 
     private void handleMessage(Request request) {
         Message message = this.gson.fromJson(request.getBody(), Message.class);
-        this.updateValue(message);
+        Platform.runLater(() -> this.updateValue(message));
     }
 
     private void handleNewUser(Request request) {
         User user = this.gson.fromJson(request.getBody(), User.class);
-        this.updateValue(user);
+        Platform.runLater(() -> this.updateValue(user));
     }
 
     private void handleUserStatus(Request request) {
         String username = request.getParam("username");
         User.Status status = User.Status.valueOf(request.getParam("status"));
-        User user = this.users.get(username);
-        user.setStatus(status);
-        this.users.put(username, user);
+        User user = ActionController.users.get(username).setStatus(status);
+        Platform.runLater(() -> this.updateValue(user));
     }
 }
