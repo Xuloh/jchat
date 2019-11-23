@@ -246,7 +246,7 @@ public class ActionController {
     }
 
     public static void spawnMulticastListener(Server server) throws IOException {
-        multicastListenerTask = new MulticastListenerTask(server.getMulticastAddress(), server.getMulticastPort(), users);
+        multicastListenerTask = new MulticastListenerTask(server.getMulticastAddress(), server.getMulticastPort());
         Service<Object> multicastListener = new Service<>() {
             @Override
             protected Task<Object> createTask() {
@@ -260,7 +260,10 @@ public class ActionController {
                 jChatClient.getServerPane().addMessages((Message)newValue);
             else if(newValue instanceof User) {
                 User user = (User)newValue;
-                users.put(user.getUsername(), user);
+                if(!users.containsKey(user.getUsername()))
+                    users.put(user.getUsername(), user);
+                else
+                    jChatClient.getServerPane().updateUserList(user);
             }
         });
     }
