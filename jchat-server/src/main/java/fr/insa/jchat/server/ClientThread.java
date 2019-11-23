@@ -98,6 +98,8 @@ public class ClientThread extends Thread {
                 return this.handleMessage(request);
             case OK:
                 return this.handleOK(request);
+            case USER_STATUS:
+                return this.handleStatus(request);
             default:
                 LOGGER.error("Unsupported request method : {}", request);
                 return null;
@@ -114,7 +116,7 @@ public class ClientThread extends Thread {
             if(this.jChatServer.getUsers().containsKey(username))
                 throw new InvalidUsernameException(username);
 
-            User user = new User(username, password, null, "#4F87FF");
+            User user = new User(username, password, null, "#4F87FF", User.Status.OFFLINE);
             this.jChatServer.getUsers().put(username, user);
 
             this.multicastNewUser(user);
@@ -260,6 +262,25 @@ public class ClientThread extends Thread {
         return response;
     }
 
+    private Request handleStatus(Request request) throws InvalidSessionException, MissingParamException, InvalidParamValue {
+        this.jChatServer.checkSession(request);
+        Request.requiredParams(request, "status");
+
+        try {
+            User.Status status = User.Status.valueOf(request.getParam("status"));
+            UUID session = UUID.fromString(request.getParam("session"));
+            User user = jChatServer.getUserFromSession(session).setStatus(status);
+            this.multicastUserStatus(user);
+        }
+        catch(IllegalArgumentException e) {
+            throw new InvalidParamValue("Invalid value for status param", e, "status");
+        }
+
+        Request response = new Request();
+        response.setMethod(Request.Method.OK);
+        return response;
+    }
+
     private void welcomeMessage(String username) {
         Message message = Message.fromText("Welcome here " + username);
         String body = this.gson.toJson(message);
@@ -284,6 +305,20 @@ public class ClientThread extends Thread {
         request.setMethod(Request.Method.NEW_USER);
         request.setParam("length", Integer.toString(body.length()));
         request.setBody(body);
+        try {
+            this.jChatServer.getMulticastQueue().put(request);
+        }
+        catch(InterruptedException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    private void multicastUserStatus(User user) {
+        Request request = new Request();
+        request.setMethod(Request.Method.USER_STATUS);
+        request.setParam("username", user.getUsername());
+        request.setParam("status", user.getStatus().toString());
+
         try {
             this.jChatServer.getMulticastQueue().put(request);
         }
