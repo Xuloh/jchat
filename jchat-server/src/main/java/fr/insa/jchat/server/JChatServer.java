@@ -24,6 +24,7 @@ import java.io.PrintStream;
 import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -77,6 +78,9 @@ public class JChatServer {
                 Socket clientSocket = this.serverSocket.accept();
                 LOGGER.info("Starting client thread");
                 new ClientThread(clientSocket, this).start();
+            }
+            catch(SocketException e) {
+                LOGGER.error("An error occurred while creating worker thread", e);
             }
             catch(IOException e) {
                 LOGGER.error("An error occurred while waiting for a connection", e);

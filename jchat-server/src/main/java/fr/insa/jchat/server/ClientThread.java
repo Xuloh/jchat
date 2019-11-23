@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -33,6 +35,10 @@ import java.util.UUID;
  
 public class ClientThread extends Thread {
     private static final Logger LOGGER = LogManager.getLogger(ClientThread.class);
+
+    private static final int CLIENT_INACTIVITY_TIMEOUT = 300_000; // 5 mn in millis
+
+    private String username;
 
     private static int threadCounter = 0;
 
@@ -42,9 +48,10 @@ public class ClientThread extends Thread {
 
     private Gson gson;
 
-    public ClientThread(Socket clientSocket, JChatServer jChatServer) {
+    public ClientThread(Socket clientSocket, JChatServer jChatServer) throws SocketException {
         super("ClientThread-" + threadCounter++);
         this.clientSocket = clientSocket;
+        this.clientSocket.setSoTimeout(CLIENT_INACTIVITY_TIMEOUT);
         this.jChatServer = jChatServer;
         this.gson = new GsonBuilder()
             .registerTypeAdapter(File.class, new FileSerializer())
@@ -81,8 +88,26 @@ public class ClientThread extends Thread {
                 Request.sendRequest(response, socketOut);
             }
         }
+        catch(SocketTimeoutException e) {
+            LOGGER.warn("Client connection has timed out, closing the connection", e);
+            this.closeSocket();
+            if(this.username != null) {
+                User user = this.jChatServer.getUsers().get(username);
+                user.setStatus(User.Status.OFFLINE);
+                this.multicastUserStatus(user);
+            }
+        }
         catch(IOException e) {
-            LOGGER.error("An error occurred in client thread {}", this.getName(), e);
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    private void closeSocket() {
+        try {
+            this.clientSocket.close();
+        }
+        catch(IOException e) {
+            LOGGER.error(e.getMessage(), e);
         }
     }
 
@@ -144,6 +169,7 @@ public class ClientThread extends Thread {
 
         UUID uuid = UUID.randomUUID();
         this.jChatServer.getLogins().put(uuid, username);
+        this.username = username;
 
         Request response = new Request();
         response.setMethod(Request.Method.OK);
