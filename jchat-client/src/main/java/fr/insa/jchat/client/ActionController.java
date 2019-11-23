@@ -9,9 +9,6 @@ import fr.insa.jchat.common.Server;
 import fr.insa.jchat.common.User;
 import fr.insa.jchat.common.deserializer.FileDeserializer;
 import fr.insa.jchat.common.deserializer.MessageDeserializer;
-import fr.insa.jchat.common.exception.InvalidBodySizeException;
-import fr.insa.jchat.common.exception.InvalidMethodException;
-import fr.insa.jchat.common.exception.InvalidParamValue;
 import fr.insa.jchat.common.exception.InvalidRequestException;
 import fr.insa.jchat.common.serializer.FileSerializer;
 import fr.insa.jchat.common.serializer.MessageSerializer;
@@ -48,6 +45,14 @@ public class ActionController {
     private static PrintStream socketOut;
 
     private static BufferedReader socketIn;
+
+    private static final Object mutex = new Object();
+
+    private static Thread keepAliveThread;
+
+    private static boolean stopKeepAliveThread = false;
+
+    private static final long KEEP_ALIVE_TIMEOUT = 120_000L; // in millis
 
     public static ObservableMap<String, User> users = FXCollections.synchronizedObservableMap(FXCollections.observableHashMap());
 
@@ -204,10 +209,14 @@ public class ActionController {
     }
 
     public static Request sendRequest(Request request) throws InvalidRequestException, IOException {
-        Request.sendRequest(request, socketOut);
-        Request response = Request.createRequestFromReader(socketIn);
-        LOGGER.info("{}", response);
-        return response;
+        synchronized(mutex) {
+            keepAliveThread.interrupt();
+            LOGGER.info("Sending request : {}", request);
+            Request.sendRequest(request, socketOut);
+            Request response = Request.createRequestFromReader(socketIn);
+            LOGGER.info("Got response : {}", response);
+            return response;
+        }
     }
 
     public static void spawnMulticastListener(Server server) throws IOException {
@@ -230,19 +239,45 @@ public class ActionController {
     }
 
     public static void ensureSocket() throws IOException {
-        if(ip == null)
-            ip = jChatClient.getConnectPane().getValue("ip");
+        synchronized(mutex) {
+            if(ip == null)
+                ip = jChatClient.getConnectPane().getValue("ip");
 
-        if(port == null)
-            port = Integer.parseInt(jChatClient.getConnectPane().getValue("port"));
+            if(port == null)
+                port = Integer.parseInt(jChatClient.getConnectPane().getValue("port"));
 
-        if(socket != null && (socket.isInputShutdown() || socket.isOutputShutdown()))
-            socket.close();
+            if(socket != null && (socket.isInputShutdown() || socket.isOutputShutdown()))
+                socket.close();
 
-        if(socket == null || socket.isClosed()) {
-            socket = new Socket(ip, port);
-            socketOut = new PrintStream(socket.getOutputStream());
-            socketIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            if(socket == null || socket.isClosed()) {
+                socket = new Socket(ip, port);
+                socketOut = new PrintStream(socket.getOutputStream());
+                socketIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+                if(keepAliveThread != null) {
+                    stopKeepAliveThread = true;
+                    keepAliveThread.interrupt();
+                }
+
+                keepAliveThread = new Thread(() -> {
+                    while(!stopKeepAliveThread) {
+                        try {
+                            Thread.sleep(KEEP_ALIVE_TIMEOUT);
+                            synchronized(mutex) {
+                                Request request = new Request();
+                                request.setMethod(Request.Method.OK);
+                                sendRequest(request);
+                            }
+                        }
+                        catch(InterruptedException ignored) {}
+                        catch(InvalidRequestException | IOException e) {
+                            LOGGER.error(e.getMessage(), e);
+                        }
+                    }
+                }, "KeepAliveThread");
+                stopKeepAliveThread = false;
+                keepAliveThread.start();
+            }
         }
     }
 }

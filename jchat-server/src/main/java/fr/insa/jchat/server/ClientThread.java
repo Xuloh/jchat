@@ -96,6 +96,8 @@ public class ClientThread extends Thread {
                 return this.handleGet(request);
             case MESSAGE:
                 return this.handleMessage(request);
+            case OK:
+                return this.handleOK(request);
             default:
                 LOGGER.error("Unsupported request method : {}", request);
                 return null;
@@ -247,6 +249,12 @@ public class ClientThread extends Thread {
             LOGGER.error(e.getMessage(), e);
         }
 
+        Request response = new Request();
+        response.setMethod(Request.Method.OK);
+        return response;
+    }
+
+    private Request handleOK(Request request) {
         Request response = new Request();
         response.setMethod(Request.Method.OK);
         return response;
