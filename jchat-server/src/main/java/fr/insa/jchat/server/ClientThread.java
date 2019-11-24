@@ -6,7 +6,6 @@ import com.google.gson.JsonParseException;
 import fr.insa.jchat.common.Message;
 import fr.insa.jchat.common.Request;
 import fr.insa.jchat.common.User;
-import fr.insa.jchat.common.deserializer.FileDeserializer;
 import fr.insa.jchat.common.exception.InvalidLoginException;
 import fr.insa.jchat.common.exception.InvalidMessageException;
 import fr.insa.jchat.common.exception.InvalidParamValue;
@@ -55,7 +54,6 @@ public class ClientThread extends Thread {
         this.jChatServer = jChatServer;
         this.gson = new GsonBuilder()
             .registerTypeAdapter(File.class, new FileSerializer())
-            .registerTypeAdapter(File.class, new FileDeserializer())
             .registerTypeAdapter(Message.class, new MessageSerializer())
             .create();
     }

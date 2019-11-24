@@ -5,7 +5,6 @@ import com.google.gson.GsonBuilder;
 import fr.insa.jchat.common.Message;
 import fr.insa.jchat.common.Request;
 import fr.insa.jchat.common.User;
-import fr.insa.jchat.common.deserializer.FileDeserializer;
 import fr.insa.jchat.common.deserializer.MessageDeserializer;
 import fr.insa.jchat.common.serializer.FileSerializer;
 import javafx.application.Platform;
@@ -21,7 +20,6 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketException;
-import java.util.Map;
 
 public class MulticastListenerTask extends Task<Object> {
     private static final Logger LOGGER = LogManager.getLogger(MulticastListenerTask.class);
@@ -37,7 +35,6 @@ public class MulticastListenerTask extends Task<Object> {
         this.multicastSocket.joinGroup(address);
         this.gson = new GsonBuilder()
             .registerTypeAdapter(File.class, new FileSerializer())
-            .registerTypeAdapter(File.class, new FileDeserializer())
             .registerTypeAdapter(Message.class, new MessageDeserializer(ActionController.users))
             .create();
     }

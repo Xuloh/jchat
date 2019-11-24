@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import fr.insa.jchat.common.Message;
 import fr.insa.jchat.common.Request;
-import fr.insa.jchat.common.deserializer.FileDeserializer;
 import fr.insa.jchat.common.serializer.FileSerializer;
 import fr.insa.jchat.common.serializer.MessageSerializer;
 import org.apache.logging.log4j.LogManager;
@@ -32,7 +31,6 @@ public class MulticastThread extends Thread {
         this.multicastSocket.joinGroup(this.jChatServer.getServer().getMulticastAddress());
         this.gson = new GsonBuilder()
             .registerTypeAdapter(File.class, new FileSerializer())
-            .registerTypeAdapter(File.class, new FileDeserializer())
             .registerTypeAdapter(Message.class, new MessageSerializer())
             .create();
     }

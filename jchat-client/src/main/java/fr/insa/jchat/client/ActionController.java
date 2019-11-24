@@ -7,7 +7,6 @@ import fr.insa.jchat.common.Message;
 import fr.insa.jchat.common.Request;
 import fr.insa.jchat.common.Server;
 import fr.insa.jchat.common.User;
-import fr.insa.jchat.common.deserializer.FileDeserializer;
 import fr.insa.jchat.common.deserializer.MessageDeserializer;
 import fr.insa.jchat.common.exception.InvalidRequestException;
 import fr.insa.jchat.common.serializer.FileSerializer;
@@ -61,7 +60,6 @@ public class ActionController {
 
     private static Gson gson = new GsonBuilder()
         .registerTypeAdapter(File.class, new FileSerializer())
-        .registerTypeAdapter(File.class, new FileDeserializer())
         .registerTypeAdapter(Message.class, new MessageDeserializer(users))
         .registerTypeAdapter(Message.class, new MessageSerializer())
         .create();

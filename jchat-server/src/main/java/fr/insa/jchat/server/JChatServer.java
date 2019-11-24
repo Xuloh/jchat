@@ -6,7 +6,6 @@ import fr.insa.jchat.common.Message;
 import fr.insa.jchat.common.Request;
 import fr.insa.jchat.common.Server;
 import fr.insa.jchat.common.User;
-import fr.insa.jchat.common.deserializer.FileDeserializer;
 import fr.insa.jchat.common.exception.InvalidParamValue;
 import fr.insa.jchat.common.exception.InvalidSessionException;
 import fr.insa.jchat.common.exception.MissingParamException;
@@ -135,7 +134,6 @@ public class JChatServer {
             .setPrettyPrinting()
             .serializeNulls()
             .registerTypeAdapter(File.class, new FileSerializer())
-            .registerTypeAdapter(File.class, new FileDeserializer())
             .create();
 
         Config serverConfig;
