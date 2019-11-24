@@ -2,29 +2,34 @@ package fr.insa.jchat.server;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import fr.insa.jchat.common.Message;
 import fr.insa.jchat.common.Request;
 import fr.insa.jchat.common.Server;
 import fr.insa.jchat.common.User;
+import fr.insa.jchat.common.deserializer.MessageDeserializer;
 import fr.insa.jchat.common.exception.InvalidParamValue;
 import fr.insa.jchat.common.exception.InvalidSessionException;
 import fr.insa.jchat.common.exception.MissingParamException;
 import fr.insa.jchat.common.serializer.FileSerializer;
+import fr.insa.jchat.common.serializer.MessageSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.Reader;
+import java.lang.reflect.Type;
 import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -49,17 +54,17 @@ public class JChatServer {
 
     private BlockingQueue<Request> multicastQueue;
 
-    public JChatServer(Config config) throws IOException {
+    public JChatServer(Config config, Map<String, User> users, List<Message> messages) throws IOException {
         this.config = config;
         this.serverSocket = new ServerSocket(
             config.getServer().getPort(),
             config.getBacklog(),
             config.getBindAddress()
         );
-        this.users = new ConcurrentHashMap<>();
+        this.users = users;
+        this.messages = messages;
         this.logins = new ConcurrentHashMap<>();
         this.multicastQueue = new LinkedBlockingQueue<>();
-        this.messages = Collections.synchronizedList(new LinkedList<>());
     }
 
     public void run() {
@@ -126,6 +131,28 @@ public class JChatServer {
         return this.messages;
     }
 
+    public void saveData() throws FileNotFoundException {
+        LOGGER.info("Saving server data");
+        Gson gson = new GsonBuilder()
+            .setPrettyPrinting()
+            .serializeNulls()
+            .registerTypeAdapter(File.class, new FileSerializer())
+            .registerTypeAdapter(Message.class, new MessageSerializer())
+            .create();
+
+        File userFile = new File("./users.json");
+        File messageFile = new File("./messages.json");
+
+        PrintStream userOut = new PrintStream(userFile);
+        PrintStream messageOut = new PrintStream(messageFile);
+
+        List<User> users = new ArrayList<>(this.users.values());
+
+        gson.toJson(users, userOut);
+        gson.toJson(this.messages, messageOut);
+        LOGGER.info("Server data saved");
+    }
+
     public static Config loadConfig() throws FileNotFoundException {
         LOGGER.info("Loading config file");
 
@@ -138,8 +165,9 @@ public class JChatServer {
 
         Config serverConfig;
 
+        // generate default config
         if(!configFile.exists()) {
-            LOGGER.warn("No config file found, creating a new one");
+            LOGGER.warn("config.json not found, generating default configuration");
 
             try {
                 Server server = new Server(
@@ -171,7 +199,7 @@ public class JChatServer {
             }
         }
         else {
-            BufferedReader configIn = new BufferedReader(new InputStreamReader(new FileInputStream(configFile)));
+            Reader configIn = new InputStreamReader(new FileInputStream(configFile));
             serverConfig = gson.fromJson(configIn, Config.class);
         }
 
@@ -180,11 +208,69 @@ public class JChatServer {
         return serverConfig;
     }
 
+    public static Map<String, User> loadUsers() throws FileNotFoundException {
+        LOGGER.info("Loading user data");
+
+        File userFile = new File("./users.json");
+        Gson gson = new GsonBuilder()
+            .registerTypeAdapter(File.class, new FileSerializer())
+            .create();
+
+        Map<String, User> users = new ConcurrentHashMap<>();
+
+        if(!userFile.exists())
+            LOGGER.warn("users.json not found");
+        else {
+            Reader userIn = new InputStreamReader(new FileInputStream(userFile));
+            Type type = new TypeToken<List<User>>() {}.getType();
+            List<User> userList = gson.fromJson(userIn, type);
+            userList.forEach(user -> users.put(user.getUsername(), user));
+            LOGGER.info("User data loaded");
+        }
+
+        return users;
+    }
+
+    public static List<Message> loadMessages(Map<String, User> users) throws FileNotFoundException {
+        LOGGER.info("Loading message data");
+
+        File messageFile = new File("./messages.json");
+        Gson gson = new GsonBuilder()
+            .registerTypeAdapter(File.class, new FileSerializer())
+            .registerTypeAdapter(Message.class, new MessageSerializer())
+            .registerTypeAdapter(Message.class, new MessageDeserializer(users))
+            .create();
+
+        List<Message> messages = Collections.synchronizedList(new LinkedList<>());
+
+        if(!messageFile.exists())
+            LOGGER.warn("messages.json not found");
+        else {
+            Reader messageIn = new InputStreamReader(new FileInputStream(messageFile));
+            Type type = new TypeToken<List<Message>>() {}.getType();
+            List<Message> messagesTmp = gson.fromJson(messageIn, type);
+            messages.addAll(messagesTmp);
+            LOGGER.info("Message data loaded");
+        }
+
+        return messages;
+    }
+
     public static void main(String[] args) {
         LOGGER.info("Starting JChat server ...");
         try {
             Config config = loadConfig();
-            JChatServer server = new JChatServer(config);
+            Map<String, User> users = loadUsers();
+            List<Message> messages = loadMessages(users);
+            JChatServer server = new JChatServer(config, users, messages);
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                try {
+                    server.saveData();
+                }
+                catch(Exception e) {
+                    LOGGER.fatal("Could not save server data !", e);
+                }
+            }, "ServerShutdown"));
             server.run();
         }
         catch(FileNotFoundException e) {
