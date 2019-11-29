@@ -18,4 +18,4 @@ in its running directory.
 ## How to run the client
 
 - Windows : `./gradlew.bat :jchat-client:run`
-- Windows : `./gradlew :jchat-client:run`
+- Linux : `./gradlew :jchat-client:run`
