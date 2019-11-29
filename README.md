@@ -1,6 +1,6 @@
 # JChat server and client
 
-## Requirements
+## Requirements
 
 Building and running requires [JDK 13](https://www.oracle.com/technetwork/java/javase/downloads/jdk13-downloads-5672538.html).
 
@@ -15,7 +15,7 @@ The server will look for a configuration file `config.json` in its running direc
 On shutdown, the server will save user and messages data into two files (`users.json` and `messages.json` respectively)
 in its running directory.
 
-## How to run the client
+## How to run the client
 
 - Windows : `./gradlew.bat :jchat-client:run`
 - Windows : `./gradlew :jchat-client:run`
