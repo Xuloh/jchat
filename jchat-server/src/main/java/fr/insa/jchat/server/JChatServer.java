@@ -48,10 +48,12 @@ public class JChatServer {
 
     private Map<String, User> users;
 
+    // map that stores user sessions
     private Map<UUID, String> logins;
 
     private List<Message> messages;
 
+    // queue used with the MulticastThread
     private BlockingQueue<Request> multicastQueue;
 
     public JChatServer(Config config, Map<String, User> users, List<Message> messages) throws IOException {
@@ -68,6 +70,7 @@ public class JChatServer {
     }
 
     public void run() {
+        // start the MulticastThread to consume multicast requests from the queue
         try {
             new MulticastThread(this).start();
         }
@@ -92,6 +95,9 @@ public class JChatServer {
         }
     }
 
+    /**
+     * Checks that the given request has a valid session param and returns it, if not throws a InvalidSessionException
+     */
     public synchronized UUID checkSession(Request request) throws MissingParamException, InvalidParamValue, InvalidSessionException {
         Request.requiredParams(request, "session");
         try {
@@ -121,6 +127,10 @@ public class JChatServer {
         return this.config.getServer();
     }
 
+    /**
+     * Returns the User associated with the given session
+     * or throws an InvalidArgumentException if not user matches the given session
+     */
     public User getUserFromSession(UUID session) {
         if(!this.logins.containsKey(session))
             throw new IllegalArgumentException("Invalid session " + session);
@@ -131,6 +141,7 @@ public class JChatServer {
         return this.messages;
     }
 
+    // saves user and messages data to json files
     public void saveData() throws FileNotFoundException {
         LOGGER.info("Saving server data");
         Gson gson = new GsonBuilder()
@@ -153,6 +164,7 @@ public class JChatServer {
         LOGGER.info("Server data saved");
     }
 
+    // loads server config from json file
     public static Config loadConfig() throws FileNotFoundException {
         LOGGER.info("Loading config file");
 
@@ -208,6 +220,7 @@ public class JChatServer {
         return serverConfig;
     }
 
+    // loads user data from json file
     public static Map<String, User> loadUsers() throws FileNotFoundException {
         LOGGER.info("Loading user data");
 
@@ -231,6 +244,7 @@ public class JChatServer {
         return users;
     }
 
+    // loads messages data from json file
     public static List<Message> loadMessages(Map<String, User> users) throws FileNotFoundException {
         LOGGER.info("Loading message data");
 

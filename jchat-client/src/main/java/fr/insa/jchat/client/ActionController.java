@@ -68,6 +68,7 @@ public class ActionController {
         ActionController.jChatClient = jChatClient;
     }
 
+    // each button click on the ui calls this method with a different action string
     public static void handleAction(String action) {
         try {
             ensureSocket();
@@ -243,6 +244,7 @@ public class ActionController {
         }
     }
 
+    // spawns a background task to listen for multicast messages using javafx concurrent api
     public static void spawnMulticastListener(Server server) throws IOException {
         multicastListenerTask = new MulticastListenerTask(server.getMulticastAddress(), server.getMulticastPort());
         Service<Object> multicastListener = new Service<>() {
@@ -266,6 +268,7 @@ public class ActionController {
         });
     }
 
+    // checks that the connection is still alive and create a new one if not
     public static void ensureSocket() throws IOException {
         synchronized(mutex) {
             if(ip == null)

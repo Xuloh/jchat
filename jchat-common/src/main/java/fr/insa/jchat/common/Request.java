@@ -18,6 +18,9 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+/**
+ * Class used to represent messages sent back and forth between the server and the client
+ */
 public class Request {
     private static final Logger LOGGER = LogManager.getLogger(Request.class);
 
@@ -27,6 +30,9 @@ public class Request {
 
     private String body;
 
+    /**
+     * creates a Request instance with data read from the given BufferedReader
+     */
     public static Request createRequestFromReader(BufferedReader in) throws IOException, InvalidRequestException {
         Request request = new Request();
 
@@ -82,6 +88,9 @@ public class Request {
         return request;
     }
 
+    /**
+     * Checks that the given request has all the required params, if not throws a MissingParamException
+     */
     public static void requiredParams(Request request, String... params) throws MissingParamException {
         for(String param : params) {
             if(!request.params.containsKey(param))
@@ -91,6 +100,9 @@ public class Request {
         }
     }
 
+    /**
+     * Checks that the given request has a body, if not throws a MissingBodyException
+     */
     public static void requireBody(Request request) throws MissingBodyException {
         if(request.body == null || request.body.length() == 0)
             throw new MissingBodyException();

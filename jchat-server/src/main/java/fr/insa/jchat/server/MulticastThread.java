@@ -40,6 +40,8 @@ public class MulticastThread extends Thread {
         LOGGER.info("Starting multicast thread");
         while(true) {
             try {
+                // try to take a request from the server queue*
+                // if the queue is empty the thread sleeps until a request is added to the queue
                 Request request = this.jChatServer.getMulticastQueue().take();
                 LOGGER.info(
                     "Sending message to multicast address {} : {}",
