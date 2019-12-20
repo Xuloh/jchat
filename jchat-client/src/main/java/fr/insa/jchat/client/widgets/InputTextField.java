@@ -4,12 +4,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 
-import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class InputTextField extends TextField {
     private Label errorLabel;
 
-    private Function<String, Boolean> validate;
+    private Predicate<String> validate;
 
     private boolean valid;
 
@@ -17,7 +17,7 @@ public class InputTextField extends TextField {
         this(tooltip, null, "");
     }
 
-    public InputTextField(String tooltip, Function<String, Boolean> validate, String errorMessage) {
+    public InputTextField(String tooltip, Predicate<String> validate, String errorMessage) {
         this.setTooltip(new Tooltip(tooltip));
         this.valid = true;
 
@@ -30,7 +30,7 @@ public class InputTextField extends TextField {
 
             this.focusedProperty().addListener((observable, oldValue, newValue) -> {
                 if(!newValue) {
-                    boolean matches = this.validate.apply(this.getText());
+                    boolean matches = this.validate.test(this.getText());
                     this.valid = matches;
                     this.errorLabel.setVisible(!matches);
                     this.errorLabel.setText(matches ? "" : errorMessage);
